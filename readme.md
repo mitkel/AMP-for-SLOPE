@@ -1,3 +1,5 @@
+# AMP-for-SLOPE
+
 This repo contains the final project for the course <b>Some topis in the analysis of large data bases</b> run at the University of Warsaw.
 
 Useful links:<br>
