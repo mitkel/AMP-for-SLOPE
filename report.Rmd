@@ -3,28 +3,28 @@ title: "AMP for SLOPE"
 author: "Bartłomiej Polaczyk"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output: 
-  # pdf_document
-  html_document:
-   css: AMP-SLOPE.css
-   mathjax: local
-   self_contained: false
+  pdf_document
+  # html_document:
+  #  css: AMP-SLOPE.css
+  #  mathjax: local
+  #  self_contained: false
 abstract: |
   The aim of this project is to investigate the the approximate message passing algorithm for SLOPE regularization problem based on [@bu2019algorithmic] and compare it with classical convex optimization methods.
   Some numerical experiments regarding the cases that do not fit into the theoretical framework of [@bu2019algorithmic] are also performed and analyzed.
 bibliography: AMP-SLOPE.bib
 header-includes:
-  - \usepackage{amsmath}
+  - \usepackage{amsmath,mathtools}
 ---
 %LaTeX commands
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\E}{\mathbb{E}}
 
-%numbering equations in html format
-<script type="text/x-mathjax-config">
-MathJax.Hub.Config({
-  TeX: { equationNumbers: { autoNumber: "AMS" } }
-});
-</script>
+<!-- %numbering equations in html format -->
+<!-- <script type="text/x-mathjax-config"> -->
+<!-- MathJax.Hub.Config({ -->
+<!--   TeX: { equationNumbers: { autoNumber: "AMS" } } -->
+<!-- }); -->
+<!-- </script> -->
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -43,12 +43,12 @@ lapply(packages, library, character.only = TRUE)
 We are interested in solving the standard linear inverse problem
 \begin{equation}\label{eq:LM-problem} 
   y = Ax + w,
-\end{equation}
-where $y\in \R^n$ is  and $A\in\R^{n\times p}$ are known parameters of the model, $w\in\R^n$ is a random noise vector and $x\in\R^p$ is an unknown vector of paramteres we wish to estimate.
+\end{equation} 
+where $y\in \R^n$ and $A\in\R^{n\times p}$ are known parameters of the model, $w\in\R^n$ is a random noise vector and $x\in\R^p$ is an unknown vector of paramteres we wish to estimate.
 We assume $p\gg n$, i.e. the number of features is much greater than the size of the sample data and whence there might be many potential solutions to the problem$~\eqref{eq:LM-problem}$.
 
 To resolve this issue and prevent overfitting, we introduce a penalty function $\phi$ which faforizes sparse solutions of$~\eqref{eq:LM-problem}$, i.e. now we are looking among the minimizers of the following form
-\begin{equation}
+\begin{equation}\label{eq:SLOPE}
   \widehat{x} = \operatorname*{argmin}_x \{\, \Vert Ax - y \Vert_2^2 + \phi(x) \,\}.
 \end{equation}
 The usual choices of $\phi$ are scaled $l^2$ penalty (Tikhonov regularization) and $l^1$ penalty (LASSO).
@@ -56,14 +56,17 @@ This note concerns SLOPE regularization, introduced for the first time in [@MR34
 \begin{equation}
   \phi(x)= \phi_{\theta}(x) = \sum_{i=1}^n \theta_ix_i^{\downarrow},
 \end{equation}
-where $x_1^\downarrow \ge x_2^\downarrow \ge \ldots \ge x_n^\downarrow$ is the ordered permutation of the vector $(\vert x_1\vert,\vert x_2\vert,\ldots,\vert x_n\vert)$ and $\theta$ is ahyperparameter of the model.
+where $x_1^\downarrow \ge x_2^\downarrow \ge \ldots \ge x_n^\downarrow$ is the ordered permutation of the vector $(\vert x_1\vert,\vert x_2\vert,\ldots,\vert x_n\vert)$ and $\theta\in\R_+^n$ is a hyperparameter of the model.
 Such a choice is a generalization of the $l^1$ regularization, as can be seen by taking $\theta_i=\operatorname{const}$.
 
 The fact that $\phi_\theta$ is non-separable makes the analysis of its teoretical properties much more onerous than in case of classical (separable) models, cf. [@MR3418717, @bu2019algorithmic].
 Nonetheless, it turns out that SLOPE has two advantages over other regularization methods such as LASSO and knocoffs, namely:
 
-1. it achieves certain minimax estimation properties under particular random designs *without* requiring any knowledge of the sparsity degree of $\widehat{x}$, cf. [@MR3852663]
+1. it achieves certain minimax estimation properties under particular random designs *without* requiring any knowledge of the sparsity degree of $\widehat{x}$, cf. [@MR3852663];
 2. it controls the false discovery rate in the case of independent predictors, cf. [@MR3418717].
+
+We are interested in the algorithmic properties of the problem $\eqref{eq:SLOPE}$.
+Since the objective function in $\eqref{eq:SLOPE}$ is convex but not smooth, one can not apply directly the classical gradient descent and has to turn to other methods.
 
 ### AMP
 @donoho2009message, @bu2019algorithmic, @zdeborova2016statistical, @MR2810285.
