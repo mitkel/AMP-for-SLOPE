@@ -11,7 +11,7 @@ abstract: |
 bibliography: AMP-SLOPE.bib
 #header-includes: |
 ---
-%asd
+%LaTeX commands
 \newcommand{\R}{\mathbb{R}}
 
 ```{r setup, include=FALSE}
