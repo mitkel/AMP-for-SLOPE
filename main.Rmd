@@ -4,8 +4,8 @@ author: "Bartłomiej Polaczyk"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output: 
   html_document:
-    css: AMP-SLOPE.css
-    keep_md: true
+    css: docs/AMP-SLOPE.css
+    #keep_md: true            # creates alternative md file (ugly)
 abstract: |
   The aim of this project is to investigate the the approximate message passing algorithm for SLOPE regularization problem based on [@bu2019algorithmic] and compare it with classical convex optimization methods.
   Some numerical experiments regarding the cases that do not fit into the theoretical framework of [@bu2019algorithmic] are also performed and analyzed.
