@@ -30,7 +30,7 @@
 }
 
 @Article{donoho2009message,
-  author    = {Donoho, D. L and Maleki, A. and Montanari, A.},
+  author    = {Donoho, D. and Maleki, A. and Montanari, A.},
   journal   = {Proceedings of the National Academy of Sciences},
   title     = {Message-passing algorithms for compressed sensing},
   year      = {2009},
@@ -47,6 +47,24 @@
   title     = {Algorithmic analysis and statistical estimation of slope via approximate message passing},
   year      = {2019},
   pages     = {9366--9376},
+  url       = {http://par.nsf.gov/biblio/10163278},
+}
+
+@Article{MR3418717,
+  author     = {Bogdan, M. and van den Berg, E. and Sabatti, C. and Su, W. and Cand\`es, E. J.},
+  journal    = {Ann. Appl. Stat.},
+  title      = {S{LOPE}---adaptive variable selection via convex optimization},
+  year       = {2015},
+  issn       = {1932-6157},
+  number     = {3},
+  pages      = {1103--1140},
+  volume     = {9},
+  doi        = {10.1214/15-AOAS842},
+  fjournal   = {The Annals of Applied Statistics},
+  mrclass    = {62J07 (62J05 62J15)},
+  mrnumber   = {3418717},
+  mrreviewer = {Lu Lin},
+  url        = {https://doi.org/10.1214/15-AOAS842},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}
