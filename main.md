@@ -1,7 +1,7 @@
 ---
 title: "AMP for SLOPE"
 author: "Bartłomiej Polaczyk"
-date: "`r format(Sys.time(), '%d %B %Y')`"
+date: "02 July 2020"
 output: 
   html_document:
     css: AMP-SLOPE.css
@@ -15,16 +15,7 @@ bibliography: AMP-SLOPE.bib
 %LaTeX commands
 \newcommand{\R}{\mathbb{R}}
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 
-# Libraries
-packages <- c("foreign", "lubridate", "ggplot2","reshape2")
-lapply(packages, library, character.only = TRUE)
-
-# working directory
-#setwd("~/Dropbox/Uczelnia//")
-```
 
 
 ## Theoretical bacground
