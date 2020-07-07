@@ -67,4 +67,20 @@
   url        = {https://doi.org/10.1214/15-AOAS842},
 }
 
+@Article{MR3852663,
+  author   = {Bellec, P. C. and Lecu\'{e}, G. and Tsybakov, A. B.},
+  journal  = {Ann. Statist.},
+  title    = {Slope meets {L}asso: improved oracle bounds and optimality},
+  year     = {2018},
+  issn     = {0090-5364},
+  number   = {6B},
+  pages    = {3603--3642},
+  volume   = {46},
+  doi      = {10.1214/17-AOS1670},
+  fjournal = {The Annals of Statistics},
+  mrclass  = {62H12 (62C20 62G20 62J07)},
+  mrnumber = {3852663},
+  url      = {https://doi.org/10.1214/17-AOS1670},
+}
+
 @Comment{jabref-meta: databaseType:bibtex;}

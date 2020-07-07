@@ -1,0 +1,267 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={AMP for SLOPE},
+            pdfauthor={Bartłomiej Polaczyk},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{AMP for SLOPE}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Bartłomiej Polaczyk}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{03 July 2020}
+
+\usepackage{amsmath,mathtools}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+The aim of this project is to investigate the the approximate message
+passing algorithm for SLOPE regularization problem based on (Bu et al.
+2019) and compare it with classical convex optimization methods. Some
+numerical experiments regarding the cases that do not fit into the
+theoretical framework of (Bu et al. 2019) are also performed and
+analyzed.
+\end{abstract}
+
+%LaTeX commands
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+
+\subsection{Theoretical bacground}\label{theoretical-bacground}
+
+\subsubsection{Introduction}\label{introduction}
+
+We are interested in solving the standard linear inverse problem
+
+\begin{equation}\label{eq:LM-problem} 
+  y = Ax + w,
+\end{equation}
+
+where \(y\in \R^n\) and \(A\in\R^{n\times p}\) are known parameters of
+the model, \(w\in\R^n\) is a random noise vector and \(x\in\R^p\) is an
+unknown vector of paramteres we wish to estimate. We assume \(p\gg n\),
+i.e.~the number of features is much greater than the size of the sample
+data and whence there might be many potential solutions to the
+problem\(~\eqref{eq:LM-problem}\).
+
+To resolve this issue and prevent overfitting, we introduce a penalty
+function \(\phi\) which faforizes sparse solutions
+of\(~\eqref{eq:LM-problem}\), i.e.~now we are looking among the
+minimizers of the following form
+
+\begin{equation}\label{eq:SLOPE}
+  \widehat{x} = \operatorname*{argmin}_x \{\, \frac{1}{2}\Vert Ax - y \Vert_2^2 + \phi(x) \,\}.
+\end{equation}
+
+The usual choices of \(\phi\) are scaled \(l^2\) penalty (Tikhonov
+regularization) and \(l^1\) penalty (LASSO). This note concerns SLOPE
+regularization, introduced for the first time in (Bogdan et al. 2015),
+which assumes \(\phi\) to be the sorted \(l^1\) penalty, i.e. \[
+  \phi(x)= \phi_{\theta}(x) = \sum_{i=1}^n \theta_ix_i^{\downarrow},
+\] where
+\(x_1^\downarrow \ge x_2^\downarrow \ge \ldots \ge x_n^\downarrow\) is
+the ordered permutation of the vector
+\((\vert x_1\vert,\vert x_2\vert,\ldots,\vert x_n\vert)\) and
+\(\theta\in\R_+^n\) is a hyperparameter of the model. Such a choice is a
+generalization of the \(l^1\) regularization, as can be seen by taking
+\(\theta_i=\operatorname{const}\).
+
+The fact that \(\phi_\theta\) is non-separable makes the analysis of its
+teoretical properties much more onerous than in case of classical
+(separable) models, cf. (Bogdan et al. 2015, Bu et al. (2019)).
+Nonetheless, it turns out that SLOPE has two advantages over other
+regularization methods such as LASSO and knocoffs, namely:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  it achieves certain minimax estimation properties under particular
+  random designs \emph{without} requiring any knowledge of the sparsity
+  degree of \(\widehat{x}\), cf. (Bellec, Lecué, and Tsybakov 2018);
+\item
+  it controls the false discovery rate in the case of independent
+  predictors, cf. (Bogdan et al. 2015).
+\end{enumerate}
+
+We are interested in the algorithmic solutions to the problem
+\(\eqref{eq:SLOPE}\). Since the objective function in
+\(\eqref{eq:SLOPE}\) is convex but not smooth, one can not apply
+directly the classical gradient descent and has to turn to other
+methods.
+
+A natural alternative solution is the plethora of proximal algorithms,
+e.g.~ISTA (and its improvement -- FISTA, cf. (A. Beck and Teboulle
+2009)) or more classical alternating direction methods of multipliers
+(ADMM). The methods have been throughly studied in the literature, cf.
+(Beck A 2017) for a detailed treatment of the subject.
+
+In this note we will focus on another approach, via the approximate
+message passing, considered for the first time in context of the LASSO
+problem in (Donoho, Maleki, and Montanari 2009) and subsequentially
+developed in e.g. (Bayati and Montanari 2011), and for the SLOPE
+regularization in (Bu et al. 2019) -- see e.g. (Zdeborová and Krzakala
+2016) for an accessible derivation of the method.
+
+In the subsequent sections we will describre briefly these approaches.
+
+\subsubsection{Proximal methods}\label{proximal-methods}
+
+Denoting \(g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2\), the ISTA iteration
+can be written as:
+
+\begin{itemize}
+\tightlist
+\item
+  gradient step: \(r_k = x_k - \alpha\nabla g(x_k)\)
+\item
+  proximal step: \(x_{k+1} = \operatorname{prox}_{\gamma\phi}(r_k)\),
+\end{itemize}
+
+where \(\gamma\) is the learning rate and \(\operatorname{prox}\)
+denotes the proximal operator given by \[
+  \operatorname{prox}_{\gamma\phi}(y) = \operatorname*{argmin}_x \{\, \gamma\phi(x) + \frac{1}{2}\vert x- y \vert^2 \,\}.
+\] In case of the sorted \(l^1\) norm, the first order condition for the
+minimizer reads \[
+  x + \gamma\nabla\phi(x) = y
+\] It is known that the rate of convergence of this method is
+\(O(1/k)\), where \(k\) is the number of steps.
+
+\subsubsection{Approximate message
+passing}\label{approximate-message-passing}
+
+\subsection{Numerical experiments}\label{numerical-experiments}
+
+\subsubsection{Comparison with convex optimization
+methods}\label{comparison-with-convex-optimization-methods}
+
+\subsection*{References}\label{references}
+\addcontentsline{toc}{subsection}{References}
+
+\hypertarget{refs}{}
+\hypertarget{ref-MR2810285}{}
+Bayati, M., and A. Montanari. 2011. ``The Dynamics of Message Passing on
+Dense Graphs, with Applications to Compressed Sensing.'' \emph{IEEE
+Trans. Inform. Theory} 57 (2): 764--85.
+doi:\href{https://doi.org/10.1109/TIT.2010.2094817}{10.1109/TIT.2010.2094817}.
+
+\hypertarget{ref-MR2486527}{}
+Beck, A., and M. Teboulle. 2009. ``A Fast Iterative
+Shrinkage-Thresholding Algorithm for Linear Inverse Problems.''
+\emph{SIAM J. Imaging Sci.} 2 (1): 183--202.
+doi:\href{https://doi.org/10.1137/080716542}{10.1137/080716542}.
+
+\hypertarget{ref-MR3719240}{}
+Beck, A. 2017. \emph{First-Order Methods in Optimization}. Vol. 25.
+MOS-Siam Series on Optimization. Society for Industrial; Applied
+Mathematics (SIAM), Philadelphia, PA; Mathematical Optimization Society,
+Philadelphia, PA.
+doi:\href{https://doi.org/10.1137/1.9781611974997.ch1}{10.1137/1.9781611974997.ch1}.
+
+\hypertarget{ref-MR3852663}{}
+Bellec, P. C., G. Lecué, and A. B. Tsybakov. 2018. ``Slope Meets Lasso:
+Improved Oracle Bounds and Optimality.'' \emph{Ann. Statist.} 46 (6B):
+3603--42.
+doi:\href{https://doi.org/10.1214/17-AOS1670}{10.1214/17-AOS1670}.
+
+\hypertarget{ref-MR3418717}{}
+Bogdan, M., E. van den Berg, C. Sabatti, W. Su, and E. J. Candès. 2015.
+``SLOPE---adaptive Variable Selection via Convex Optimization.''
+\emph{Ann. Appl. Stat.} 9 (3): 1103--40.
+doi:\href{https://doi.org/10.1214/15-AOAS842}{10.1214/15-AOAS842}.
+
+\hypertarget{ref-bu2019algorithmic}{}
+Bu, Z., J. Klusowski, C. Rush, and W. Su. 2019. ``Algorithmic Analysis
+and Statistical Estimation of Slope via Approximate Message Passing.''
+In \emph{Advances in Neural Information Processing Systems}, 9366--76.
+\url{http://par.nsf.gov/biblio/10163278}.
+
+\hypertarget{ref-donoho2009message}{}
+Donoho, D., A. Maleki, and A. Montanari. 2009. ``Message-Passing
+Algorithms for Compressed Sensing.'' \emph{Proceedings of the National
+Academy of Sciences} 106 (45). National Acad Sciences: 18914--9.
+doi:\href{https://doi.org/https://doi.org/10.1073/pnas.0909892106}{https://doi.org/10.1073/pnas.0909892106}.
+
+\hypertarget{ref-zdeborova2016statistical}{}
+Zdeborová, L., and F. Krzakala. 2016. ``Statistical Physics of
+Inference: Thresholds and Algorithms.'' \emph{Advances in Physics} 65
+(5). Taylor \& Francis: 453--552.
+doi:\href{https://doi.org/https://doi.org/10.1080/00018732.2016.1211393}{https://doi.org/10.1080/00018732.2016.1211393}.
+
+
+\end{document}
