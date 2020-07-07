@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bartłomiej Polaczyk" />
 
-<meta name="date" content="2020-07-02" />
+<meta name="date" content="2020-07-07" />
 
 <title>AMP for SLOPE</title>
 
@@ -135,7 +135,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">AMP for SLOPE</h1>
 <h4 class="author"><em>Bartłomiej Polaczyk</em></h4>
-<h4 class="date"><em>02 July 2020</em></h4>
+<h4 class="date"><em>07 July 2020</em></h4>
 <div class="abstract">
 <p class="abstract">Abstract</p>
 <p>The aim of this project is to investigate the the approximate message passing algorithm for SLOPE regularization problem based on <span class="citation">(Bu et al. 2019)</span> and compare it with classical convex optimization methods. Some numerical experiments regarding the cases that do not fit into the theoretical framework of <span class="citation">(Bu et al. 2019)</span> are also performed and analyzed.</p>
@@ -149,49 +149,65 @@ MathJax.Hub.Config({
   TeX: { equationNumbers: { autoNumber: "AMS" } }
 });
 </script>
-<div id="theoretical-bacground" class="section level2">
-<h2>Theoretical bacground</h2>
-<div id="introduction" class="section level3">
-<h3>Introduction</h3>
+<div id="theoretical-bacground" class="section level1">
+<h1>Theoretical bacground</h1>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
 We are interested in solving the standard linear inverse problem
 <span class="math display">\[\begin{equation}\label{eq:LM-problem} 
   y = Ax + w,
 \end{equation}\]</span>
-<p>where <span class="math inline">\(y\in {\mathbb{R}}^n\)</span> is and <span class="math inline">\(A\in{\mathbb{R}}^{n\times p}\)</span> are known parameters of the model, <span class="math inline">\(w\in{\mathbb{R}}^n\)</span> is a random noise vector and <span class="math inline">\(x\in{\mathbb{R}}^p\)</span> is an unknown vector of paramteres we wish to estimate. We assume <span class="math inline">\(p\gg n\)</span>, i.e. the number of features is much greater than the size of the sample data and whence there might be many potential solutions to the problem<span class="math inline">\(~\eqref{eq:LM-problem}\)</span>.</p>
+<p>where <span class="math inline">\(y\in {\mathbb{R}}^n\)</span> and <span class="math inline">\(A\in{\mathbb{R}}^{n\times p}\)</span> are known parameters of the model, <span class="math inline">\(w\in{\mathbb{R}}^n\)</span> is a random noise vector and <span class="math inline">\(x\in{\mathbb{R}}^p\)</span> is an unknown vector of paramteres we wish to estimate. We assume <span class="math inline">\(p\gg n\)</span>, i.e. the number of features is much greater than the size of the sample data and whence there might be many potential solutions to the problem<span class="math inline">\(~\eqref{eq:LM-problem}\)</span>.</p>
 To resolve this issue and prevent overfitting, we introduce a penalty function <span class="math inline">\(\phi\)</span> which faforizes sparse solutions of<span class="math inline">\(~\eqref{eq:LM-problem}\)</span>, i.e. now we are looking among the minimizers of the following form
-<span class="math display">\[\begin{equation}
-  \widehat{x} = \operatorname*{argmin}_x \{\, \Vert Ax - y \Vert_2^2 + \phi(x) \,\}.
+<span class="math display">\[\begin{equation}\label{eq:SLOPE}
+  \widehat{x} = \operatorname*{argmin}_x \{\, \frac{1}{2}\Vert Ax - y \Vert_2^2 + \phi(x) \,\}.
 \end{equation}\]</span>
-The usual choices of <span class="math inline">\(\phi\)</span> are scaled <span class="math inline">\(l^2\)</span> penalty (Tikhonov regularization) and <span class="math inline">\(l^1\)</span> penalty (LASSO). This note concerns SLOPE regularization, introduced for the first time in <span class="citation">(Bogdan et al. 2015)</span>, which assumes <span class="math inline">\(\phi\)</span> to be the sorted <span class="math inline">\(l^1\)</span> penalty, i.e.
-<span class="math display">\[\begin{equation}
+<p>The usual choices of <span class="math inline">\(\phi\)</span> are scaled <span class="math inline">\(l^2\)</span> penalty (Tikhonov regularization) and <span class="math inline">\(l^1\)</span> penalty (LASSO). This note concerns SLOPE regularization, introduced for the first time in <span class="citation">(Bogdan et al. 2015)</span>, which assumes <span class="math inline">\(\phi\)</span> to be the sorted <span class="math inline">\(l^1\)</span> penalty, i.e. <span class="math display">\[
   \phi(x)= \phi_{\theta}(x) = \sum_{i=1}^n \theta_ix_i^{\downarrow},
-\end{equation}\]</span>
-<p>where <span class="math inline">\(x_1^\downarrow \ge x_2^\downarrow \ge \ldots \ge x_n^\downarrow\)</span> is the ordered permutation of the vector <span class="math inline">\((\vert x_1\vert,\vert x_2\vert,\ldots,\vert x_n\vert)\)</span> and <span class="math inline">\(\theta\)</span> is ahyperparameter of the model. Such a choice is a generalization of the <span class="math inline">\(l^1\)</span> regularization, as can be seen by taking <span class="math inline">\(\theta_i=\operatorname{const}\)</span>.</p>
+\]</span> where <span class="math inline">\(x_1^\downarrow \ge x_2^\downarrow \ge \ldots \ge x_n^\downarrow\)</span> is the ordered permutation of the vector <span class="math inline">\((\vert x_1\vert,\vert x_2\vert,\ldots,\vert x_n\vert)\)</span> and <span class="math inline">\(\theta_1 \ge \theta_2 \ge \ldots \theta_p\)</span> are hyperparameters of the model. Such a choice is a generalization of the <span class="math inline">\(l^1\)</span> regularization, as can be seen by taking <span class="math inline">\(\theta_i=\operatorname{const}\)</span>.</p>
 <p>The fact that <span class="math inline">\(\phi_\theta\)</span> is non-separable makes the analysis of its teoretical properties much more onerous than in case of classical (separable) models, cf. <span class="citation">(Bogdan et al. 2015, <span class="citation">Bu et al. (2019)</span>)</span>. Nonetheless, it turns out that SLOPE has two advantages over other regularization methods such as LASSO and knocoffs, namely:</p>
 <ol style="list-style-type: decimal">
-<li>it achieves certain minimax estimation properties under particular random designs <em>without</em> requiring any knowledge of the sparsity degree of <span class="math inline">\(\widehat{x}\)</span>, cf. <span class="citation">(Bellec, Lecué, and Tsybakov 2018)</span></li>
+<li>it achieves certain minimax estimation properties under particular random designs <em>without</em> requiring any knowledge of the sparsity degree of <span class="math inline">\(\widehat{x}\)</span>, cf. <span class="citation">(Bellec, Lecué, and Tsybakov 2018)</span>;</li>
 <li>it controls the false discovery rate in the case of independent predictors, cf. <span class="citation">(Bogdan et al. 2015)</span>.</li>
 </ol>
+<p>We are interested in the algorithmic solutions to the problem <span class="math inline">\(\eqref{eq:SLOPE}\)</span>. Since the objective function in <span class="math inline">\(\eqref{eq:SLOPE}\)</span> is convex but not smooth, one can not apply directly the classical gradient descent and has to turn to other methods.</p>
+<p>A natural alternative solution is the plethora of proximal algorithms, e.g. ISTA (and its improvement – FISTA, cf. <span class="citation">(A. Beck and Teboulle 2009)</span>) or more classical alternating direction methods of multipliers (ADMM). The methods have been throughly studied in the literature, cf. <span class="citation">(Beck A 2017)</span> for a detailed treatment of the subject.</p>
+<p>In this note we will focus on another approach, via the approximate message passing, considered for the first time in context of the LASSO problem in <span class="citation">(Donoho, Maleki, and Montanari 2009)</span> and subsequentially developed in e.g. <span class="citation">(Bayati and Montanari 2011)</span>, and for the SLOPE regularization in <span class="citation">(Bu et al. 2019)</span> – see e.g. <span class="citation">(Zdeborová and Krzakala 2016)</span> for an accessible derivation of the method.</p>
+<p>In the subsequent sections we will describre briefly some of these approaches.</p>
 </div>
-<div id="amp" class="section level3">
-<h3>AMP</h3>
-<p><span class="citation">Donoho, Maleki, and Montanari (2009)</span>, <span class="citation">Bu et al. (2019)</span>, <span class="citation">Zdeborová and Krzakala (2016)</span>, <span class="citation">Bayati and Montanari (2011)</span>.</p>
+<div id="proximal-methods" class="section level2">
+<h2>Proximal methods</h2>
+<p>Denoting <span class="math inline">\(g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2\)</span>, the ISTA iteration can be written as:</p>
+<hr />
+<p><strong>ISTA:</strong><br> Initialize <span class="math inline">\(x\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\gamma\in{\mathbb{R}}_+\)</span><br> <strong>while</strong> (<em>stopping condition</em>) <strong>{</strong><br>   <span class="math inline">\(x = \operatorname{prox}_{\gamma \phi}\big(x - \nabla g(x)\big)\)</span>;<br>   <em>update</em>(<span class="math inline">\(\gamma\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
+<hr />
+<p>where <span class="math inline">\(\gamma\)</span> is the learning rate, <em>update</em> is an appropriate backtracking procedure and <span class="math inline">\(\operatorname{prox}\)</span> denotes the proximal operator given by <span class="math display">\[
+  \operatorname{prox}_{\gamma\phi}(y) := \operatorname*{argmin}_x \{\, \gamma\phi(x) + \frac{1}{2}\Vert x-y \Vert_2^2 \,\}.
+\]</span></p>
+<p><span class="citation">A. Beck and Teboulle (2009)</span> have introduced a faster version of ISTA, a.k.a. FISTA, which is based on the idea of Nesterov momentum. The general form of the algorithm is the following:</p>
+<hr />
+<p><strong>FISTA:</strong><br> Initialize <span class="math inline">\(x=y\in{\mathbb{R}}\)</span>, <span class="math inline">\(\gamma \in {\mathbb{R}}_+\)</span>, <span class="math inline">\(t = 1\)</span><br> <strong>while</strong> <em>(stopping condition)</em> <strong>{</strong><br>   <span class="math inline">\(x_{old}=x\)</span>;<br>   <span class="math inline">\(x = \operatorname{prox}_{\gamma \phi}\big(y - \nabla g(y)\big)\)</span><br>   <span class="math inline">\(y = x_{old} + t(x-x_{old})\)</span><br>   <em>update</em>(<span class="math inline">\(\gamma, t\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
+<hr />
+<p>Here <span class="math inline">\(t\)</span> can be thought of as a momentum term, which (if updated correctly) can increase substantialy the speed of convergence of the algorithm. Note that keeping <span class="math inline">\(t=1\)</span> results in ISTA algorithm.</p>
+<p>One of the difficulties in dealing with SLOPE is that the regulizer <span class="math inline">\(\phi\)</span> is non-separable and thus its proximal operator cannot be applied element-wise. Following <span class="citation">(Bogdan et al. 2015)</span>, it can be easily checked that…</p>
 </div>
-<div id="convex-optimization-methods" class="section level3">
-<h3>Convex optimization methods</h3>
+<div id="approximate-message-passing" class="section level2">
+<h2>Approximate message passing</h2>
 </div>
 </div>
-<div id="numerical-experiments" class="section level2">
-<h2>Numerical experiments</h2>
-<div id="comparison-with-convex-optimization-methods" class="section level3">
-<h3>Comparison with convex optimization methods</h3>
-</div>
-</div>
+<div id="numerical-experiments" class="section level1">
+<h1>Numerical experiments</h1>
 <div id="references" class="section level2 unnumbered">
 <h2>References</h2>
 <div id="refs" class="references">
 <div id="ref-MR2810285">
 <p>Bayati, M., and A. Montanari. 2011. “The Dynamics of Message Passing on Dense Graphs, with Applications to Compressed Sensing.” <em>IEEE Trans. Inform. Theory</em> 57 (2): 764–85. doi:<a href="https://doi.org/10.1109/TIT.2010.2094817">10.1109/TIT.2010.2094817</a>.</p>
+</div>
+<div id="ref-MR2486527">
+<p>Beck, A., and M. Teboulle. 2009. “A Fast Iterative Shrinkage-Thresholding Algorithm for Linear Inverse Problems.” <em>SIAM J. Imaging Sci.</em> 2 (1): 183–202. doi:<a href="https://doi.org/10.1137/080716542">10.1137/080716542</a>.</p>
+</div>
+<div id="ref-MR3719240">
+<p>Beck, A. 2017. <em>First-Order Methods in Optimization</em>. Vol. 25. MOS-Siam Series on Optimization. Society for Industrial; Applied Mathematics (SIAM), Philadelphia, PA; Mathematical Optimization Society, Philadelphia, PA. doi:<a href="https://doi.org/10.1137/1.9781611974997.ch1">10.1137/1.9781611974997.ch1</a>.</p>
 </div>
 <div id="ref-MR3852663">
 <p>Bellec, P. C., G. Lecué, and A. B. Tsybakov. 2018. “Slope Meets Lasso: Improved Oracle Bounds and Optimality.” <em>Ann. Statist.</em> 46 (6B): 3603–42. doi:<a href="https://doi.org/10.1214/17-AOS1670">10.1214/17-AOS1670</a>.</p>
@@ -207,6 +223,7 @@ The usual choices of <span class="math inline">\(\phi\)</span> are scaled <span 
 </div>
 <div id="ref-zdeborova2016statistical">
 <p>Zdeborová, L., and F. Krzakala. 2016. “Statistical Physics of Inference: Thresholds and Algorithms.” <em>Advances in Physics</em> 65 (5). Taylor &amp; Francis: 453–552. doi:<a href="https://doi.org/https://doi.org/10.1080/00018732.2016.1211393">https://doi.org/10.1080/00018732.2016.1211393</a>.</p>
+</div>
 </div>
 </div>
 </div>
