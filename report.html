@@ -179,7 +179,7 @@ To resolve this issue and prevent overfitting, we introduce a penalty function <
 <h2>Proximal methods</h2>
 <p>Denoting <span class="math inline">\(g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2\)</span>, the iterative shrinkage thresholding algorithm (ISTA) iteration for SLOPE can be written as:</p>
 <hr />
-<p><strong>ISTA:</strong><br> Initialize <span class="math inline">\(x\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\theta\in\Delta_p\)</span><br> <strong>while</strong> (<em>stopping condition</em>) <strong>{</strong><br>   <span class="math inline">\(x = {\operatorname{prox}}_{\phi_\theta}\big(x - \nabla g(x)\big)\)</span>;<br>   <em>update</em>(<span class="math inline">\(\theta\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
+<p><strong>ISTA:</strong><br> Initialize <span class="math inline">\(x\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\theta\in\Delta_p\)</span> <br> <strong>while</strong> (<em>stopping condition</em>) <strong>{</strong> <br>   <span class="math inline">\(x = {\operatorname{prox}}_{\phi_\theta}\big(x - \nabla g(x)\big)\)</span>;<br>   <em>update</em>(<span class="math inline">\(\theta\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
 <hr />
 <p>where <span class="math inline">\(\theta\)</span> can be thought of as the learning rate, <em>update</em> is an appropriate backtracking procedure and <span class="math inline">\(\operatorname{prox}\)</span> denotes the proximal operator given by <span class="math display">\[
   {\operatorname{prox}}_{h}(y) := \operatorname*{argmin}_x \{\, h(x) + \frac{1}{2}\Vert x-y \Vert_2^2 \,\}.

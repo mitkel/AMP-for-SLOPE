@@ -3,7 +3,8 @@ title: "AMP for SLOPE"
 author: "Bartłomiej Polaczyk"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output: 
-  # pdf_document
+  # pdf_document:
+  #   latex_engine: xelatex
   html_document:
    css: AMP-SLOPE.css
    mathjax: local
@@ -13,8 +14,8 @@ abstract: |
   Some numerical experiments regarding the cases that do not fit into the theoretical framework of [@bu2019algorithmic] are also performed and analyzed.
 bibliography: AMP-SLOPE.bib
 header-includes:
-  - \usepackage{amsmath,mathtools}
-  - \usepackage[ruled,vlined]{algorithm2e}
+  - \usepackage{mathtools}
+  # - \usepackage[ruled,vlined]{algorithm2e}
 ---
 %LaTeX commands
 \newcommand{\R}{\mathbb{R}}
@@ -87,8 +88,8 @@ Denoting $g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2$, the iterative shrinkage thres
 
 ******
 **ISTA:**<br>
-Initialize $x\in\R^p$, $\theta\in\Delta_p$<br>
-**while** (*stopping condition*) **{**<br>
+Initialize $x\in\R^p$, $\theta\in\Delta_p$ <br>
+**while** (*stopping condition*) **{** <br>
 &emsp;  $x = \prox_{\phi_\theta}\big(x - \nabla g(x)\big)$;<br>
 &emsp;  *update*($\theta$);<br>
 **} return** $x$
