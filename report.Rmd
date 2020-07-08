@@ -19,6 +19,10 @@ header-includes:
 %LaTeX commands
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\E}{\mathbb{E}}
+\newcommand{\prox}{\operatorname{prox}}
+\newcommand{\sign}{\operatorname{sign}}
+\newcommand{\abs}[1]{\left\vert #1 \right\vert}
+\newcommand{\norm}[1]{\left\Vert #1 \right\Vert}
 
 %numbering equations in html format
 <script type="text/x-mathjax-config">
@@ -53,12 +57,13 @@ To resolve this issue and prevent overfitting, we introduce a penalty function $
   \widehat{x} = \operatorname*{argmin}_x \{\, \frac{1}{2}\Vert Ax - y \Vert_2^2 + \phi(x) \,\}.
 \end{equation}
 The usual choices of $\phi$ are scaled $l^2$ penalty (Tikhonov regularization) and $l^1$ penalty (LASSO).
-This note concerns SLOPE regularization, introduced for the first time in [@MR3418717], which assumes $\phi$ to be the sorted $l^1$ penalty, i.e.
+This note concerns sorted $l^1$ penalized estimation (abbrev. SLOPE), introduced for the first time in [@MR3418717], which assumes $\phi$ to be the sorted $l^1$ penalty, i.e.
 $$
   \phi(x)= \phi_{\theta}(x) = \sum_{i=1}^n \theta_ix_i^{\downarrow},
 $$
-where $x_1^\downarrow \ge x_2^\downarrow \ge \ldots \ge x_n^\downarrow$ is the ordered permutation of the vector $(\vert x_1\vert,\vert x_2\vert,\ldots,\vert x_n\vert)$ and $\theta_1 \ge \theta_2 \ge \ldots \theta_p$ are hyperparameters of the model.
-Such a choice is a generalization of the $l^1$ regularization, as can be seen by taking $\theta_i=\operatorname{const}$.
+where $x_1^\downarrow \ge x_2^\downarrow \ge \ldots \ge x_n^\downarrow$ is the ordered permutation of the vector $\abs{x}=(\abs{x_1},\abs{x_2},\ldots,\abs{x_n})$ and $\theta_1 \ge \theta_2 \ge \ldots \theta_p \ge 0$ are hyperparameters of the model.
+To lighten notation, we denote $\Delta_p = \{\, x\in\R^p\colon x_1\ge x_2 \ge \ldots \ge x_p \ge 0 \,\}$, so that the above requirements read: $x^\downarrow,\theta\in\Delta_p$, where $x^\downarrow = P\abs{x}$ for some permutation $P$ of the set $\{1,2,\ldots,p\}$.
+Such a choice of regulizer is a generalization of the $l^1$ regularization, as can be seen by taking $\theta_i\equiv\operatorname{const}$.
 
 The fact that $\phi_\theta$ is non-separable makes the analysis of its teoretical properties much more onerous than in case of classical (separable) models, cf. [@MR3418717, @bu2019algorithmic].
 Nonetheless, it turns out that SLOPE has two advantages over other regularization methods such as LASSO and knocoffs, namely:
@@ -78,21 +83,21 @@ In the subsequent sections we will describre briefly some of these approaches.
 
 ## Proximal methods
 
-Denoting $g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2$, the ISTA iteration can be written as:
+Denoting $g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2$, the iterative shrinkage thresholding algorithm (ISTA) iteration for SLOPE can be written as:
 
 ******
 **ISTA:**<br>
-Initialize $x\in\R^p$, $\gamma\in\R_+$<br>
+Initialize $x\in\R^p$, $\theta\in\Delta_p$<br>
 **while** (*stopping condition*) **{**<br>
-&emsp;  $x = \operatorname{prox}_{\gamma \phi}\big(x - \nabla g(x)\big)$;<br>
-&emsp;  *update*($\gamma$);<br>
+&emsp;  $x = \prox_{\phi_\theta}\big(x - \nabla g(x)\big)$;<br>
+&emsp;  *update*($\theta$);<br>
 **} return** $x$
 
 ******
 
-where $\gamma$ is the learning rate, *update* is an appropriate backtracking procedure and $\operatorname{prox}$ denotes the proximal operator given by
+where $\theta$ can be thought of as the learning rate, *update* is an appropriate backtracking procedure and $\operatorname{prox}$ denotes the proximal operator given by
 $$
-  \operatorname{prox}_{\gamma\phi}(y) := \operatorname*{argmin}_x \{\, \gamma\phi(x) + \frac{1}{2}\Vert x-y \Vert_2^2 \,\}.
+  \prox_{h}(y) := \operatorname*{argmin}_x \{\, h(x) + \frac{1}{2}\Vert x-y \Vert_2^2 \,\}.
 $$
 
 @MR2486527 have introduced a faster version of ISTA, a.k.a. FISTA, which is based on the idea of Nesterov momentum.
@@ -100,22 +105,67 @@ The general form of the algorithm is the following:
 
 ******
 **FISTA:**<br>
-Initialize $x=y\in\R$, $\gamma \in \R_+$, $t = 1$<br>
+Initialize $x=x_{old}\in\R^p$, $\theta \in \Delta_p$, $t = 1$<br>
 **while** *(stopping condition)* **{**<br>
+&emsp;  $u = x_{old} + t(x-x_{old})$;<br>
 &emsp;  $x_{old}=x$;<br>
-&emsp;  $x = \operatorname{prox}_{\gamma \phi}\big(y - \nabla g(y)\big)$<br>
-&emsp;  $y = x_{old} + t(x-x_{old})$<br>
-&emsp;  *update*($\gamma, t$);<br>
+&emsp;  $x = \prox_{\phi_\theta}\big(u - \nabla g(u)\big)$;<br>
+&emsp;  *update*($\theta, t$);<br>
 **} return** $x$
 
 ******
 
-Here $t$ can be thought of as a momentum term, which (if updated correctly) can increase substantialy the speed of convergence of the algorithm.
-Note that keeping $t=1$ results in ISTA algorithm.
+Here $t$ can be thought of as a acceleration term, which (if updated correctly) can increase substantialy the speed of convergence of the algorithm.
+Note that keeping $t\equiv 1$ restores ISTA.
 
-One of the difficulties in dealing with SLOPE is that the regulizer $\phi$ is non-separable and thus its proximal operator cannot be applied element-wise.
-Following [@MR3418717], it can be easily checked that...
+One of the difficulties in dealing with SLOPE is that the regulizer $\phi_\theta$ is non-separable and thus its proximal operator cannot be applied element-wise.
+[@MR3418717] have proposed an efficient algorithm that computes 
+$$
+ \widehat{x}=
+ \prox_{\phi_{\theta}}(y) = 
+ \operatorname*{argmin}_x \big\{ \frac{1}{2}\norm{y-x}^2 + \sum_i \theta_ix_i^\downarrow \big\}
+ =
+ \operatorname*{argmin}_x \big\{\sum_i\big[ \frac{1}{2}(x^\downarrow_i)^2 + x_i^\downarrow\theta_i - x_iy_i\big]\big\}
+$$
+It is based on the following simple observations that follow immediatly from the above formulation:
 
+1. $\sign(\widehat{x}_i)=\sign(y_i)$ for each $i$ such that $\widehat{x}_i\neq 0$;
+2. $P\widehat{x}=\prox_{\phi_\theta}(Py)$ for any permutation $P$;
+3. If $y\in \Delta_p$, then $\widehat{x}\in\Delta_p$ (i.e., $y=y^\downarrow \Rightarrow \widehat{x}=\widehat{x}^\downarrow$);
+
+Therefore we can and do assume in the analysis below that $y\in\Delta_p$.
+The optimization procedure now reads:
+$$
+  \widehat{x} = 
+  \operatorname*{argmin}_{x^\downarrow\in\Delta_p} \big\{\sum_i\big[ \frac{1}{2}(x^\downarrow_i)^2 - x_i^\downarrow(y-\theta)_i \big]\big\},
+$$
+whence
+
+4. $\widehat{x}$ depends only on the vector $(\theta - y)$;
+5. If $(y - \theta)_+\in\Delta_p$ then $\widehat{x} = (y - \theta)_+$, where $v_+ = (\max(v_i,0))_i$;
+6. If $(y-\theta)_i \le (y-\theta)_{i+1}$, then $\widehat{x}_i \le \widehat{x}_{i+1}$, whence $\widehat{x}_i = \widehat{x}_{i+1}$;
+7. Consequently, if $(y-\theta)$ is nondecreasing along the indices $(i,i+1,\ldots,j)$, then $\widehat{x}_i = \widehat{x}_{i+1}= \ldots = \widehat{x}_{i+1}$ and 
+$$
+  \sum_{i\le r \le j}  \widehat{x}_r^\downarrow(y-\theta)_r 
+  =
+  \sum_{i\le r \le j} \widehat{x}_r^\downarrow(\bar{y}-\bar{\theta} ) \,
+$$
+where $\bar{y},\bar{\theta}$ are the means of $y$ and $\theta$ along the indices $(i,i+1,\ldots,j)$, so replacing $y_r,\theta_r$ with $\bar{y},\bar{\theta}$ does not change $\widehat{x}$.
+
+
+The above observations justify the procedure below proposed by [@MR3418717].
+
+******
+**FastProxSL1:**<br>
+**Input:** $y\in\R^p$, $\theta\in\Delta_p$<br>
+\# Define the operator $H_y(v) = P(\sign(y_i)v_i)_i$ for some permutation $P$, so that $H_y(y) = y^\downarrow\in\Delta_p$<br>
+$y' = H_y(y)$;<br>
+**while** $(y'-\theta)_+\notin\Delta_p$ **{**<br>
+&emsp; identify nondecreasing and nonconstant segments $i:j$ of $(y'-\theta)$<br>
+&emsp; replace $y'_r,\theta_r$ for $r\in\{i,i+1,\ldots,j\}$ by their averages $\bar{y'},\bar{\theta}$ <br>
+**} return** $H_y^{-1}(y'-\theta)_+$;
+
+******
 
 ## Approximate message passing
 
