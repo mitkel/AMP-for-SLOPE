@@ -26,11 +26,11 @@ RetrV <- function( w, sgn, P ){
 }
 
 # sanity check
-# foo <- rnorm(10)
-# bar <- MapToDelta(foo)
-# print( data.frame("v" = foo, "w" = bar$w) )
-# print( isTRUE( all.equal((foo*bar$sgn)[bar$P], bar$w) ) )
-# print( isTRUE( all.equal(RetrV(bar$w, bar$sgn, bar$P), foo) ) )
+foo <- rnorm(5)
+bar <- MapToDelta(foo)
+print( data.frame("v" = foo, "w" = bar$w) )
+print( isTRUE( all.equal((foo*bar$sgn)[bar$P], bar$w) ) )
+print( isTRUE( all.equal(RetrV(bar$w, bar$sgn, bar$P), foo) ) )
 
 
 # DeltaCheck:
