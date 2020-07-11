@@ -63,5 +63,5 @@ FastProxSL1 <- function( y, theta){
 
 # sanity check:
 # for theta = const, ProxSL1 is a shrinkage operator
-print(foo <- sample(seq(from=-5, to=5, by=1), 11))
-print(FastProxSL1(foo, theta=rep(2, times=11)))
+print(foo <- sample(seq(from=-4, to=4, by=1), 9))
+print(FastProxSL1(foo, theta=rep(2, times=9)))
