@@ -84,19 +84,19 @@ In the subsequent sections we will describre briefly some of these approaches.
 
 ## Proximal methods
 
-Denoting $g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2$, the iterative shrinkage thresholding algorithm (ISTA) iteration for SLOPE can be written as:
+Denoting $g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2$, the iterative shrinkage thresholding algorithm (ISTA) iteration for SLOPE with given $\theta$ can be written as:
 
 ******
 **ISTA:**<br>
 Initialize $x\in\R^p$, $\theta\in\Delta_p$ <br>
 **while** (*stopping condition*) **{** <br>
-&emsp;  $x = \prox_{\phi_\theta}\big(x - \nabla g(x)\big)$;<br>
-&emsp;  *update*($\theta$);<br>
+&emsp;  $x = \prox_{t\phi_\theta}\big(x - t\nabla g(x)\big)$;<br>
+&emsp;  *update*($t$);<br>
 **} return** $x$
 
 ******
 
-where $\theta$ can be thought of as the learning rate, *update* is an appropriate backtracking procedure and $\operatorname{prox}$ denotes the proximal operator given by
+where $t$ can be thought of as the learning rate, *update* is an appropriate backtracking procedure and $\operatorname{prox}$ denotes the proximal operator given by
 $$
   \prox_{h}(y) := \operatorname*{argmin}_x \{\, h(x) + \frac{1}{2}\Vert x-y \Vert_2^2 \,\}.
 $$
