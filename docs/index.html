@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bartłomiej Polaczyk" />
 
-<meta name="date" content="2020-07-08" />
+<meta name="date" content="2020-07-14" />
 
 <title>AMP for SLOPE</title>
 
@@ -135,7 +135,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">AMP for SLOPE</h1>
 <h4 class="author"><em>Bartłomiej Polaczyk</em></h4>
-<h4 class="date"><em>08 July 2020</em></h4>
+<h4 class="date"><em>14 July 2020</em></h4>
 <div class="abstract">
 <p class="abstract">Abstract</p>
 <p>The aim of this project is to investigate the the approximate message passing algorithm for SLOPE regularization problem based on <span class="citation">(Bu et al. 2019)</span> and compare it with classical convex optimization methods. Some numerical experiments regarding the cases that do not fit into the theoretical framework of <span class="citation">(Bu et al. 2019)</span> are also performed and analyzed.</p>
@@ -177,11 +177,11 @@ To resolve this issue and prevent overfitting, we introduce a penalty function <
 </div>
 <div id="proximal-methods" class="section level2">
 <h2>Proximal methods</h2>
-<p>Denoting <span class="math inline">\(g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2\)</span>, the iterative shrinkage thresholding algorithm (ISTA) iteration for SLOPE can be written as:</p>
+<p>Denoting <span class="math inline">\(g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2\)</span>, the iterative shrinkage thresholding algorithm (ISTA) iteration for SLOPE with given <span class="math inline">\(\theta\)</span> can be written as:</p>
 <hr />
-<p><strong>ISTA:</strong><br> Initialize <span class="math inline">\(x\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\theta\in\Delta_p\)</span> <br> <strong>while</strong> (<em>stopping condition</em>) <strong>{</strong> <br>   <span class="math inline">\(x = {\operatorname{prox}}_{\phi_\theta}\big(x - \nabla g(x)\big)\)</span>;<br>   <em>update</em>(<span class="math inline">\(\theta\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
+<p><strong>ISTA:</strong><br> Initialize <span class="math inline">\(x\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\theta\in\Delta_p\)</span> <br> <strong>while</strong> (<em>stopping condition</em>) <strong>{</strong> <br>   <span class="math inline">\(x = {\operatorname{prox}}_{t\phi_\theta}\big(x - t\nabla g(x)\big)\)</span>;<br>   <em>update</em>(<span class="math inline">\(t\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
 <hr />
-<p>where <span class="math inline">\(\theta\)</span> can be thought of as the learning rate, <em>update</em> is an appropriate backtracking procedure and <span class="math inline">\(\operatorname{prox}\)</span> denotes the proximal operator given by <span class="math display">\[
+<p>where <span class="math inline">\(t\)</span> can be thought of as the learning rate, <em>update</em> is an appropriate backtracking procedure and <span class="math inline">\(\operatorname{prox}\)</span> denotes the proximal operator given by <span class="math display">\[
   {\operatorname{prox}}_{h}(y) := \operatorname*{argmin}_x \{\, h(x) + \frac{1}{2}\Vert x-y \Vert_2^2 \,\}.
 \]</span></p>
 <p><span class="citation">A. Beck and Teboulle (2009)</span> have introduced a faster version of ISTA, a.k.a. FISTA, which is based on the idea of Nesterov momentum. The general form of the algorithm is the following:</p>
