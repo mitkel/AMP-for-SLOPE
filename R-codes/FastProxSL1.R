@@ -1,5 +1,3 @@
-library(gsubfn) # for multivalued functions handling
-
 # MapToDelta:
 #   Input: vector v
 #   Output: vector w, vector sgn, permutation vector P
@@ -24,14 +22,6 @@ RetrV <- function( w, sgn, P ){
   )
   return( w[foo]*sgn )
 }
-
-# sanity check
-foo <- rnorm(5)
-bar <- MapToDelta(foo)
-print( data.frame("v" = foo, "w" = bar$w) )
-print( isTRUE( all.equal((foo*bar$sgn)[bar$P], bar$w) ) )
-print( isTRUE( all.equal(RetrV(bar$w, bar$sgn, bar$P), foo) ) )
-
 
 # DeltaCheck:
 #   - since MapToDelta() requires a sorting step, we want a faster method of checking if v in Delta_p
@@ -61,7 +51,19 @@ FastProxSL1 <- function( y, theta){
   return( RetrV(bar, foo$sgn, foo$P))
 }
 
-# sanity check:
-# for theta = const, ProxSL1 is a shrinkage operator
-print(foo <- sample(seq(from=-4, to=4, by=1), 9))
-print(FastProxSL1(foo, theta=rep(2, times=9)))
+# auxilary function returning sorted l1 loss function ||Ax-y||_2^2/2 + SL1(x,theta)
+SL1Loss <- function(foo) { sum( (foo$A %*% foo$x - foo$y)**2 )/2 + as.numeric(MapToDelta(foo$x)$w %*% MapToDelta(foo$theta)$w) }
+
+
+# ===============================================================
+# sanity check
+# foo <- rnorm(5)
+# bar <- MapToDelta(foo)
+# print( data.frame("v" = foo, "w" = bar$w) )
+# print( isTRUE( all.equal((foo*bar$sgn)[bar$P], bar$w) ) )
+# print( isTRUE( all.equal(RetrV(bar$w, bar$sgn, bar$P), foo) ) )
+# 
+# # for theta = const, ProxSL1 is a shrinkage operator
+# print(foo <- sample(seq(from=-4, to=4, by=1), 9))
+# print(FastProxSL1(foo, theta=rep(2, times=9)))
+
