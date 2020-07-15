@@ -51,10 +51,6 @@ FastProxSL1 <- function( y, theta){
   return( RetrV(bar, foo$sgn, foo$P))
 }
 
-# auxilary function returning sorted l1 loss function ||Ax-y||_2^2/2 + SL1(x,theta)
-SL1Loss <- function(foo) { sum( (foo$A %*% foo$x - foo$y)**2 )/2 + as.numeric(MapToDelta(foo$x)$w %*% MapToDelta(foo$theta)$w) }
-
-
 # ===============================================================
 # sanity check
 # foo <- rnorm(5)
