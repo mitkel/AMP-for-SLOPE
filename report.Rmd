@@ -87,11 +87,11 @@ In the subsequent sections we will describre briefly some of these approaches.
 Denoting $g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2$, the iterative shrinkage thresholding algorithm (ISTA) iteration for SLOPE with given $\theta$ can be written as:
 
 ******
-**ISTA:**<br>
-Initialize $x\in\R^p$, $\theta\in\Delta_p$ <br>
+**ISTA-SLOPE:**<br>
+**Input:** $y\in\R^p$, $\theta\in\Delta_p$, $g$<br>
+Initialize $x\in\R^p$, $t>0$ <br>
 **while** (*stopping condition*) **{** <br>
 &emsp;  $x = \prox_{t\phi_\theta}\big(x - t\nabla g(x)\big)$;<br>
-&emsp;  *update*($t$);<br>
 **} return** $x$
 
 ******
@@ -105,13 +105,14 @@ $$
 The general form of the algorithm is the following:
 
 ******
-**FISTA:**<br>
-Initialize $x=x_{old}\in\R^p$, $\theta \in \Delta_p$, $t = 1$<br>
+**FISTA-SLOPE:**<br>
+**Input:** $y\in\R^p$, $\theta\in\Delta_p$, $g$<br>
+Initialize $x=x_{old}\in\R^p$, $r = 1$, $t>0$<br>
 **while** *(stopping condition)* **{**<br>
-&emsp;  $u = x_{old} + t(x-x_{old})$;<br>
+&emsp;  $u = x_{old} + r(x-x_{old})$;<br>
 &emsp;  $x_{old}=x$;<br>
-&emsp;  $x = \prox_{\phi_\theta}\big(u - \nabla g(u)\big)$;<br>
-&emsp;  *update*($\theta, t$);<br>
+&emsp;  $x = \prox_{t\phi_\theta}\big(u - t\nabla g(u)\big)$;<br>
+&emsp;  *update*($r$);<br>
 **} return** $x$
 
 ******
@@ -120,56 +121,84 @@ Here $t$ can be thought of as a acceleration term, which (if updated correctly) 
 Note that keeping $t\equiv 1$ restores ISTA.
 
 One of the difficulties in dealing with SLOPE is that the regulizer $\phi_\theta$ is non-separable and thus its proximal operator cannot be applied element-wise.
-[@MR3418717] have proposed an efficient algorithm that computes 
+[@MR3418717] have proposed an efficient algorithm that for any $u\in\R^p$ computes 
 $$
  \widehat{x}=
- \prox_{\phi_{\theta}}(y) = 
- \operatorname*{argmin}_x \big\{ \frac{1}{2}\norm{y-x}^2 + \sum_i \theta_ix_i^\downarrow \big\}
+ \prox_{\phi_{\theta}}(u) = 
+ \operatorname*{argmin}_x \big\{ \frac{1}{2}\norm{u-x}^2 + \sum_i \theta_ix_i^\downarrow \big\}
  =
- \operatorname*{argmin}_x \big\{\sum_i\big[ \frac{1}{2}(x^\downarrow_i)^2 + x_i^\downarrow\theta_i - x_iy_i\big]\big\}
+ \operatorname*{argmin}_x \big\{\sum_i\big[ \frac{1}{2}(x^\downarrow_i)^2 + x_i^\downarrow\theta_i - x_iu_i\big]\big\}
 $$
 It is based on the following simple observations that follow immediatly from the above formulation:
 
-1. $\sign(\widehat{x}_i)=\sign(y_i)$ for each $i$ such that $\widehat{x}_i\neq 0$;
-2. $P\widehat{x}=\prox_{\phi_\theta}(Py)$ for any permutation $P$;
-3. If $y\in \Delta_p$, then $\widehat{x}\in\Delta_p$ (i.e., $y=y^\downarrow \Rightarrow \widehat{x}=\widehat{x}^\downarrow$);
+1. $\sign(\widehat{x}_i)=\sign(u_i)$ for each $i$ such that $\widehat{x}_i\neq 0$;
+2. $P\widehat{x}=\prox_{\phi_\theta}(Pu)$ for any permutation $P$;
+3. If $u\in \Delta_p$, then $\widehat{x}\in\Delta_p$ (i.e., $u=u^\downarrow \Rightarrow \widehat{x}=\widehat{x}^\downarrow$);
 
-Therefore we can and do assume in the analysis below that $y\in\Delta_p$.
+Therefore we can and do assume in the analysis below that $u\in\Delta_p$.
 The optimization procedure now reads:
 $$
   \widehat{x} = 
-  \operatorname*{argmin}_{x^\downarrow\in\Delta_p} \big\{\sum_i\big[ \frac{1}{2}(x^\downarrow_i)^2 - x_i^\downarrow(y-\theta)_i \big]\big\},
+  \operatorname*{argmin}_{x^\downarrow\in\Delta_p} \big\{\sum_i\big[ \frac{1}{2}(x^\downarrow_i)^2 - x_i^\downarrow(u-\theta)_i \big]\big\},
 $$
 whence
 
-4. $\widehat{x}$ depends only on the vector $(\theta - y)$;
-5. If $(y - \theta)_+\in\Delta_p$ then $\widehat{x} = (y - \theta)_+$, where $v_+ = (\max(v_i,0))_i$;
-6. If $(y-\theta)_i \le (y-\theta)_{i+1}$, then $\widehat{x}_i \le \widehat{x}_{i+1}$, whence $\widehat{x}_i = \widehat{x}_{i+1}$;
-7. Consequently, if $(y-\theta)$ is nondecreasing along the indices $(i,i+1,\ldots,j)$, then $\widehat{x}_i = \widehat{x}_{i+1}= \ldots = \widehat{x}_{i+1}$ and 
+4. $\widehat{x}$ depends only on the vector $(\theta - u)$;
+5. If $(u - \theta)_+\in\Delta_p$ then $\widehat{x} = (u - \theta)_+$, where $v_+ = (\max(v_i,0))_i$;
+6. If $(u-\theta)_i \le (u-\theta)_{i+1}$, then $\widehat{x}_i \le \widehat{x}_{i+1}$, whence $\widehat{x}_i = \widehat{x}_{i+1}$;
+7. Consequently, if $(u-\theta)$ is nondecreasing along the indices $(i,i+1,\ldots,j)$, then $\widehat{x}_i = \widehat{x}_{i+1}= \ldots = \widehat{x}_{i+1}$ and 
 $$
-  \sum_{i\le r \le j}  \widehat{x}_r^\downarrow(y-\theta)_r 
+  \sum_{i\le r \le j}  \widehat{x}_r^\downarrow(u-\theta)_r 
   =
-  \sum_{i\le r \le j} \widehat{x}_r^\downarrow(\bar{y}-\bar{\theta} ) \,
+  \sum_{i\le r \le j} \widehat{x}_r^\downarrow(\bar{u}-\bar{\theta} ) \,
 $$
-where $\bar{y},\bar{\theta}$ are the means of $y$ and $\theta$ along the indices $(i,i+1,\ldots,j)$, so replacing $y_r,\theta_r$ with $\bar{y},\bar{\theta}$ does not change $\widehat{x}$.
+where $\bar{u},\bar{\theta}$ are the means of $u$ and $\theta$ along the indices $(i,i+1,\ldots,j)$, so replacing $u_r,\theta_r$ with $\bar{u},\bar{\theta}$ does not change $\widehat{x}$.
 
 
 The above observations justify the procedure below proposed by [@MR3418717].
 
 ******
 **FastProxSL1:**<br>
-**Input:** $y\in\R^p$, $\theta\in\Delta_p$<br>
-\# Define the operator $H_y(v) = P(\sign(y_i)v_i)_i$ for some permutation $P$, so that $H_y(y) = y^\downarrow\in\Delta_p$<br>
-$y' = H_y(y)$;<br>
-**while** $(y'-\theta)_+\notin\Delta_p$ **{**<br>
-&emsp; identify nondecreasing and nonconstant segments $i:j$ of $(y'-\theta)$<br>
-&emsp; replace $y'_r,\theta_r$ for $r\in\{i,i+1,\ldots,j\}$ by their averages $\bar{y'},\bar{\theta}$ <br>
-**} return** $H_y^{-1}(y'-\theta)_+$;
+**Input:** $u\in\R^p$, $\theta\in\Delta_p$<br>
+\# Define the operator $H_u(v) = P(\sign(u_i)v_i)_i$ for some permutation $P$, so that $H_u(u) = u^\downarrow\in\Delta_p$<br>
+$u' = H_u(u)$;<br>
+**while** $(u'-\theta)_+\notin\Delta_p$ **{**<br>
+&emsp; identify nondecreasing and nonconstant segments $i:j$ of $(u'-\theta)$<br>
+&emsp; replace $u'_r,\theta_r$ for $r\in\{i,i+1,\ldots,j\}$ by their averages $\bar{u'},\bar{\theta}$ <br>
+**} return** $H_u^{-1}(u'-\theta)_+$;
 
 ******
 
 ## Approximate message passing
 
+The AMP algorithm for SLOPE is as follows
+
+******
+**AMP-SLOPE:**<br>
+**Input:** $y\in\R^p$, $\theta\in\Delta_p$, $g$<br>
+Initialize $x=x_{old}\in\R^p$, $v=\nabla g(0)$<br>
+**while** *(stopping condition)* **{**<br>
+&emsp;  $x_{old}=x$;<br>
+&emsp;  $x = \prox_{\phi_\theta}\big(x_{old} - v\big)$;<br>
+&emsp;  $v = \nabla g(x) - \frac{v}{n} [\nabla\prox_{\phi_\theta}(x_{old} - v)]$;<br>
+&emsp;  *update*($\theta$);<br>
+**} return** $x$
+
+******
+
+Based on the observations 1.-7. above, it is easy to verify that for any vector $u\in\R^p$
+$$
+  \nabla\prox_{\phi_\theta}(u) = 
+  \Vert \prox_{\phi_\theta}(u) \Vert_0^\ast,
+  \quad\text{where}\quad
+  \norm{u}_0^\ast:= 
+  \#\{ \text{unique non-zero magintudes in } \abs{u} \}.
+$$
+E.g., $\norm{(0,3,-3,3,1)}_0^\ast = 2$.
+Therefore, $v$ update in the AMP-SLOPE algorithm can be read as
+$$
+ v = \nabla g(x) - \frac{v}{n} \norm{x}_0^\ast.
+$$
 
 # Numerical experiments
 

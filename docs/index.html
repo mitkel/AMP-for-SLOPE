@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bartłomiej Polaczyk" />
 
-<meta name="date" content="2020-07-14" />
+<meta name="date" content="2020-07-15" />
 
 <title>AMP for SLOPE</title>
 
@@ -135,7 +135,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">AMP for SLOPE</h1>
 <h4 class="author"><em>Bartłomiej Polaczyk</em></h4>
-<h4 class="date"><em>14 July 2020</em></h4>
+<h4 class="date"><em>15 July 2020</em></h4>
 <div class="abstract">
 <p class="abstract">Abstract</p>
 <p>The aim of this project is to investigate the the approximate message passing algorithm for SLOPE regularization problem based on <span class="citation">(Bu et al. 2019)</span> and compare it with classical convex optimization methods. Some numerical experiments regarding the cases that do not fit into the theoretical framework of <span class="citation">(Bu et al. 2019)</span> are also performed and analyzed.</p>
@@ -179,49 +179,62 @@ To resolve this issue and prevent overfitting, we introduce a penalty function <
 <h2>Proximal methods</h2>
 <p>Denoting <span class="math inline">\(g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2\)</span>, the iterative shrinkage thresholding algorithm (ISTA) iteration for SLOPE with given <span class="math inline">\(\theta\)</span> can be written as:</p>
 <hr />
-<p><strong>ISTA:</strong><br> Initialize <span class="math inline">\(x\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\theta\in\Delta_p\)</span> <br> <strong>while</strong> (<em>stopping condition</em>) <strong>{</strong> <br>   <span class="math inline">\(x = {\operatorname{prox}}_{t\phi_\theta}\big(x - t\nabla g(x)\big)\)</span>;<br>   <em>update</em>(<span class="math inline">\(t\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
+<p><strong>ISTA-SLOPE:</strong><br> <strong>Input:</strong> <span class="math inline">\(y\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\theta\in\Delta_p\)</span>, <span class="math inline">\(g\)</span><br> Initialize <span class="math inline">\(x\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(t&gt;0\)</span> <br> <strong>while</strong> (<em>stopping condition</em>) <strong>{</strong> <br>   <span class="math inline">\(x = {\operatorname{prox}}_{t\phi_\theta}\big(x - t\nabla g(x)\big)\)</span>;<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
 <hr />
 <p>where <span class="math inline">\(t\)</span> can be thought of as the learning rate, <em>update</em> is an appropriate backtracking procedure and <span class="math inline">\(\operatorname{prox}\)</span> denotes the proximal operator given by <span class="math display">\[
   {\operatorname{prox}}_{h}(y) := \operatorname*{argmin}_x \{\, h(x) + \frac{1}{2}\Vert x-y \Vert_2^2 \,\}.
 \]</span></p>
 <p><span class="citation">A. Beck and Teboulle (2009)</span> have introduced a faster version of ISTA, a.k.a. FISTA, which is based on the idea of Nesterov momentum. The general form of the algorithm is the following:</p>
 <hr />
-<p><strong>FISTA:</strong><br> Initialize <span class="math inline">\(x=x_{old}\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\theta \in \Delta_p\)</span>, <span class="math inline">\(t = 1\)</span><br> <strong>while</strong> <em>(stopping condition)</em> <strong>{</strong><br>   <span class="math inline">\(u = x_{old} + t(x-x_{old})\)</span>;<br>   <span class="math inline">\(x_{old}=x\)</span>;<br>   <span class="math inline">\(x = {\operatorname{prox}}_{\phi_\theta}\big(u - \nabla g(u)\big)\)</span>;<br>   <em>update</em>(<span class="math inline">\(\theta, t\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
+<p><strong>FISTA-SLOPE:</strong><br> <strong>Input:</strong> <span class="math inline">\(y\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\theta\in\Delta_p\)</span>, <span class="math inline">\(g\)</span><br> Initialize <span class="math inline">\(x=x_{old}\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(r = 1\)</span>, <span class="math inline">\(t&gt;0\)</span><br> <strong>while</strong> <em>(stopping condition)</em> <strong>{</strong><br>   <span class="math inline">\(u = x_{old} + r(x-x_{old})\)</span>;<br>   <span class="math inline">\(x_{old}=x\)</span>;<br>   <span class="math inline">\(x = {\operatorname{prox}}_{t\phi_\theta}\big(u - t\nabla g(u)\big)\)</span>;<br>   <em>update</em>(<span class="math inline">\(r\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
 <hr />
 <p>Here <span class="math inline">\(t\)</span> can be thought of as a acceleration term, which (if updated correctly) can increase substantialy the speed of convergence of the algorithm. Note that keeping <span class="math inline">\(t\equiv 1\)</span> restores ISTA.</p>
-<p>One of the difficulties in dealing with SLOPE is that the regulizer <span class="math inline">\(\phi_\theta\)</span> is non-separable and thus its proximal operator cannot be applied element-wise. <span class="citation">(Bogdan et al. 2015)</span> have proposed an efficient algorithm that computes <span class="math display">\[
+<p>One of the difficulties in dealing with SLOPE is that the regulizer <span class="math inline">\(\phi_\theta\)</span> is non-separable and thus its proximal operator cannot be applied element-wise. <span class="citation">(Bogdan et al. 2015)</span> have proposed an efficient algorithm that for any <span class="math inline">\(u\in{\mathbb{R}}^p\)</span> computes <span class="math display">\[
  \widehat{x}=
- {\operatorname{prox}}_{\phi_{\theta}}(y) = 
- \operatorname*{argmin}_x \big\{ \frac{1}{2}{\left\Vert y-x \right\Vert}^2 + \sum_i \theta_ix_i^\downarrow \big\}
+ {\operatorname{prox}}_{\phi_{\theta}}(u) = 
+ \operatorname*{argmin}_x \big\{ \frac{1}{2}{\left\Vert u-x \right\Vert}^2 + \sum_i \theta_ix_i^\downarrow \big\}
  =
- \operatorname*{argmin}_x \big\{\sum_i\big[ \frac{1}{2}(x^\downarrow_i)^2 + x_i^\downarrow\theta_i - x_iy_i\big]\big\}
+ \operatorname*{argmin}_x \big\{\sum_i\big[ \frac{1}{2}(x^\downarrow_i)^2 + x_i^\downarrow\theta_i - x_iu_i\big]\big\}
 \]</span> It is based on the following simple observations that follow immediatly from the above formulation:</p>
 <ol style="list-style-type: decimal">
-<li><span class="math inline">\({\operatorname{sign}}(\widehat{x}_i)={\operatorname{sign}}(y_i)\)</span> for each <span class="math inline">\(i\)</span> such that <span class="math inline">\(\widehat{x}_i\neq 0\)</span>;</li>
-<li><span class="math inline">\(P\widehat{x}={\operatorname{prox}}_{\phi_\theta}(Py)\)</span> for any permutation <span class="math inline">\(P\)</span>;</li>
-<li>If <span class="math inline">\(y\in \Delta_p\)</span>, then <span class="math inline">\(\widehat{x}\in\Delta_p\)</span> (i.e., <span class="math inline">\(y=y^\downarrow \Rightarrow \widehat{x}=\widehat{x}^\downarrow\)</span>);</li>
+<li><span class="math inline">\({\operatorname{sign}}(\widehat{x}_i)={\operatorname{sign}}(u_i)\)</span> for each <span class="math inline">\(i\)</span> such that <span class="math inline">\(\widehat{x}_i\neq 0\)</span>;</li>
+<li><span class="math inline">\(P\widehat{x}={\operatorname{prox}}_{\phi_\theta}(Pu)\)</span> for any permutation <span class="math inline">\(P\)</span>;</li>
+<li>If <span class="math inline">\(u\in \Delta_p\)</span>, then <span class="math inline">\(\widehat{x}\in\Delta_p\)</span> (i.e., <span class="math inline">\(u=u^\downarrow \Rightarrow \widehat{x}=\widehat{x}^\downarrow\)</span>);</li>
 </ol>
-<p>Therefore we can and do assume in the analysis below that <span class="math inline">\(y\in\Delta_p\)</span>. The optimization procedure now reads: <span class="math display">\[
+<p>Therefore we can and do assume in the analysis below that <span class="math inline">\(u\in\Delta_p\)</span>. The optimization procedure now reads: <span class="math display">\[
   \widehat{x} = 
-  \operatorname*{argmin}_{x^\downarrow\in\Delta_p} \big\{\sum_i\big[ \frac{1}{2}(x^\downarrow_i)^2 - x_i^\downarrow(y-\theta)_i \big]\big\},
+  \operatorname*{argmin}_{x^\downarrow\in\Delta_p} \big\{\sum_i\big[ \frac{1}{2}(x^\downarrow_i)^2 - x_i^\downarrow(u-\theta)_i \big]\big\},
 \]</span> whence</p>
 <ol start="4" style="list-style-type: decimal">
-<li><span class="math inline">\(\widehat{x}\)</span> depends only on the vector <span class="math inline">\((\theta - y)\)</span>;</li>
-<li>If <span class="math inline">\((y - \theta)_+\in\Delta_p\)</span> then <span class="math inline">\(\widehat{x} = (y - \theta)_+\)</span>, where <span class="math inline">\(v_+ = (\max(v_i,0))_i\)</span>;</li>
-<li>If <span class="math inline">\((y-\theta)_i \le (y-\theta)_{i+1}\)</span>, then <span class="math inline">\(\widehat{x}_i \le \widehat{x}_{i+1}\)</span>, whence <span class="math inline">\(\widehat{x}_i = \widehat{x}_{i+1}\)</span>;</li>
-<li>Consequently, if <span class="math inline">\((y-\theta)\)</span> is nondecreasing along the indices <span class="math inline">\((i,i+1,\ldots,j)\)</span>, then <span class="math inline">\(\widehat{x}_i = \widehat{x}_{i+1}= \ldots = \widehat{x}_{i+1}\)</span> and <span class="math display">\[
-  \sum_{i\le r \le j}  \widehat{x}_r^\downarrow(y-\theta)_r 
+<li><span class="math inline">\(\widehat{x}\)</span> depends only on the vector <span class="math inline">\((\theta - u)\)</span>;</li>
+<li>If <span class="math inline">\((u - \theta)_+\in\Delta_p\)</span> then <span class="math inline">\(\widehat{x} = (u - \theta)_+\)</span>, where <span class="math inline">\(v_+ = (\max(v_i,0))_i\)</span>;</li>
+<li>If <span class="math inline">\((u-\theta)_i \le (u-\theta)_{i+1}\)</span>, then <span class="math inline">\(\widehat{x}_i \le \widehat{x}_{i+1}\)</span>, whence <span class="math inline">\(\widehat{x}_i = \widehat{x}_{i+1}\)</span>;</li>
+<li>Consequently, if <span class="math inline">\((u-\theta)\)</span> is nondecreasing along the indices <span class="math inline">\((i,i+1,\ldots,j)\)</span>, then <span class="math inline">\(\widehat{x}_i = \widehat{x}_{i+1}= \ldots = \widehat{x}_{i+1}\)</span> and <span class="math display">\[
+  \sum_{i\le r \le j}  \widehat{x}_r^\downarrow(u-\theta)_r 
   =
-  \sum_{i\le r \le j} \widehat{x}_r^\downarrow(\bar{y}-\bar{\theta} ) \,
-\]</span> where <span class="math inline">\(\bar{y},\bar{\theta}\)</span> are the means of <span class="math inline">\(y\)</span> and <span class="math inline">\(\theta\)</span> along the indices <span class="math inline">\((i,i+1,\ldots,j)\)</span>, so replacing <span class="math inline">\(y_r,\theta_r\)</span> with <span class="math inline">\(\bar{y},\bar{\theta}\)</span> does not change <span class="math inline">\(\widehat{x}\)</span>.</li>
+  \sum_{i\le r \le j} \widehat{x}_r^\downarrow(\bar{u}-\bar{\theta} ) \,
+\]</span> where <span class="math inline">\(\bar{u},\bar{\theta}\)</span> are the means of <span class="math inline">\(u\)</span> and <span class="math inline">\(\theta\)</span> along the indices <span class="math inline">\((i,i+1,\ldots,j)\)</span>, so replacing <span class="math inline">\(u_r,\theta_r\)</span> with <span class="math inline">\(\bar{u},\bar{\theta}\)</span> does not change <span class="math inline">\(\widehat{x}\)</span>.</li>
 </ol>
 <p>The above observations justify the procedure below proposed by <span class="citation">(Bogdan et al. 2015)</span>.</p>
 <hr />
-<p><strong>FastProxSL1:</strong><br> <strong>Input:</strong> <span class="math inline">\(y\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\theta\in\Delta_p\)</span><br> # Define the operator <span class="math inline">\(H_y(v) = P({\operatorname{sign}}(y_i)v_i)_i\)</span> for some permutation <span class="math inline">\(P\)</span>, so that <span class="math inline">\(H_y(y) = y^\downarrow\in\Delta_p\)</span><br> <span class="math inline">\(y&#39; = H_y(y)\)</span>;<br> <strong>while</strong> <span class="math inline">\((y&#39;-\theta)_+\notin\Delta_p\)</span> <strong>{</strong><br>   identify nondecreasing and nonconstant segments <span class="math inline">\(i:j\)</span> of <span class="math inline">\((y&#39;-\theta)\)</span><br>   replace <span class="math inline">\(y&#39;_r,\theta_r\)</span> for <span class="math inline">\(r\in\{i,i+1,\ldots,j\}\)</span> by their averages <span class="math inline">\(\bar{y&#39;},\bar{\theta}\)</span> <br> <strong>} return</strong> <span class="math inline">\(H_y^{-1}(y&#39;-\theta)_+\)</span>;</p>
+<p><strong>FastProxSL1:</strong><br> <strong>Input:</strong> <span class="math inline">\(u\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\theta\in\Delta_p\)</span><br> # Define the operator <span class="math inline">\(H_u(v) = P({\operatorname{sign}}(y_i)v_i)_i\)</span> for some permutation <span class="math inline">\(P\)</span>, so that <span class="math inline">\(H_u(u) = u^\downarrow\in\Delta_p\)</span><br> <span class="math inline">\(u&#39; = H_u(u)\)</span>;<br> <strong>while</strong> <span class="math inline">\((u&#39;-\theta)_+\notin\Delta_p\)</span> <strong>{</strong><br>   identify nondecreasing and nonconstant segments <span class="math inline">\(i:j\)</span> of <span class="math inline">\((u&#39;-\theta)\)</span><br>   replace <span class="math inline">\(u&#39;_r,\theta_r\)</span> for <span class="math inline">\(r\in\{i,i+1,\ldots,j\}\)</span> by their averages <span class="math inline">\(\bar{u&#39;},\bar{\theta}\)</span> <br> <strong>} return</strong> <span class="math inline">\(H_u^{-1}(u&#39;-\theta)_+\)</span>;</p>
 <hr />
 </div>
 <div id="approximate-message-passing" class="section level2">
 <h2>Approximate message passing</h2>
+<p>The AMP algorithm for SLOPE is as follows</p>
+<hr />
+<p><strong>AMP-SLOPE:</strong><br> <strong>Input:</strong> <span class="math inline">\(y\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\theta\in\Delta_p\)</span>, <span class="math inline">\(g\)</span><br> Initialize <span class="math inline">\(x=x_{old}\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(v=\nabla g(0)\)</span><br> <strong>while</strong> <em>(stopping condition)</em> <strong>{</strong><br>   <span class="math inline">\(x_{old}=x\)</span>;<br>   <span class="math inline">\(x = {\operatorname{prox}}_{\phi_\theta}\big(x_{old} - v\big)\)</span>;<br>   <span class="math inline">\(v = \nabla g(x) - \frac{v}{n} [\nabla{\operatorname{prox}}_{\phi_\theta}(x_{old} - v)]\)</span>;<br>   <em>update</em>(<span class="math inline">\(\theta\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
+<hr />
+<p>Based on the observations 1.-7. above, it is easy to verify that for any vector <span class="math inline">\(u\in{\mathbb{R}}^p\)</span> <span class="math display">\[
+  \nabla{\operatorname{prox}}_{\phi_\theta}(u) = 
+  \Vert {\operatorname{prox}}_{\phi_\theta}(u) \Vert_0^\ast,
+  \quad\text{where}\quad
+  {\left\Vert u \right\Vert}_0^\ast:= 
+  \#\{ \text{unique non-zero magintudes in } {\left\vert u \right\vert} \}.
+\]</span> E.g., <span class="math inline">\({\left\Vert (0,3,-3,3,1) \right\Vert}_0^\ast = 2\)</span>. Therefore, <span class="math inline">\(v\)</span> update in the AMP-SLOPE algorithm can be read as <span class="math display">\[
+ v = \nabla g(x) - \frac{v}{n} {\left\Vert x \right\Vert}_0^\ast.
+\]</span></p>
 </div>
 </div>
 <div id="numerical-experiments" class="section level1">
