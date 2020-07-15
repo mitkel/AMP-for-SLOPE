@@ -41,11 +41,10 @@ library(ggplot2)
 library(reshape2)
 t <- c(1:500)
 df <- data.frame(t, ISTA_res@loss[t], FISTA_res@loss[t])
-colnames(df) <- c("t","ISTA","FISTA")
-df <- melt(df, id="t")
-png("loss.png")
+colnames(df) <- c("iteration","ISTA","FISTA")
+df <- melt(df, id="iteration")
 ggplot(data = df,
-       aes(x=t, y=value, colour=variable))+
+       aes(x=iteration, y=value, colour=variable))+
   geom_line(size=.5) +
   ggtitle("Loss evolution")
-dev.off()
+  
