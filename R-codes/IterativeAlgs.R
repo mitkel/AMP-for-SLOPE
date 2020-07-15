@@ -111,14 +111,21 @@ setMethod("algUpdate", "FISTA-SLOPE", function(x){
   return(x)
 })
 
+# AMP-SLOPE
 setClass("AMP-SLOPE",
          representation(x_old = "numeric",
-                        z = "numeric",
-                        z_old = "numeric",
-                        theta_t = ),
-         prototype(),
+                        v = "numeric",
+                        theta_t = "numeric"),
+         prototype(x_old = NA_real_,
+                   v = NA_real_,
+                   theta_t = NA_real_),
          contain = "ISTA")
 
+ZeroAstNorm <- function(foo) length(unique(abs(foo[which(foo != 0)])))
 setMethod("algUpdate", "AMP-SLOPE", function(x){
-  0
+  x@x_old = x@x
+  x@x = as.numeric(FastProxSL1(x@x_old - x@v))
+  x@v = as.numeric( t(x@A) %*% (x@A %*% x@x - x@y) - x@v*ZeroAstNorm(x@x)/dim(x@A)[1] )
+  
+  return(x)
 })
