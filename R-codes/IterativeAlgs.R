@@ -110,3 +110,15 @@ setMethod("algUpdate", "FISTA-SLOPE", function(x){
   
   return(x)
 })
+
+setClass("AMP-SLOPE",
+         representation(x_old = "numeric",
+                        z = "numeric",
+                        z_old = "numeric",
+                        theta_t = ),
+         prototype(),
+         contain = "ISTA")
+
+setMethod("algUpdate", "AMP-SLOPE", function(x){
+  0
+})
