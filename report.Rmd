@@ -228,7 +228,7 @@ $$
  t = \frac{\tau}{\tau^\ast\bigl(1-\frac{1}{n}\E\Vert{\prox_{\phi_{\tau_\ast\hat{\alpha}}}(X+\tau^\ast Z)}\Vert_0^\ast  \bigr)}.
 $$
 
-@bu2019algorithmic have shown under some technical assumptions that there is a unique fixed point of the state evolution~\eqref{eq:SE} (i.e., that $\tau^\ast$ is well defined), and that the solution $\hat{\alpha}$ to~\eqref{eq:lambda-alpha} is unique and well-defined. They have also proposed a numerical scheme for calculating $\hat{\alpha}$ based on the bisection method which we will exploit.
+@bu2019algorithmic have shown under some technical assumptions that there is a unique fixed point of the state evolution$~\eqref{eq:SE}$ (i.e., that $\tau^\ast$ is well defined), and that the solution $\hat{\alpha}$ to$~\eqref{eq:lambda-alpha}$ is unique and well-defined. They have also proposed a numerical scheme for calculating $\hat{\alpha}$ based on the bisection method which we will exploit.
 
 # Numerical experiments
 
