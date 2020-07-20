@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bartłomiej Polaczyk" />
 
-<meta name="date" content="2020-07-18" />
+<meta name="date" content="2020-07-20" />
 
 <title>AMP for SLOPE</title>
 
@@ -135,7 +135,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">AMP for SLOPE</h1>
 <h4 class="author"><em>Bartłomiej Polaczyk</em></h4>
-<h4 class="date"><em>18 July 2020</em></h4>
+<h4 class="date"><em>20 July 2020</em></h4>
 <div class="abstract">
 <p class="abstract">Abstract</p>
 <p>The aim of this project is to investigate the the approximate message passing algorithm for SLOPE regularization problem based on <span class="citation">(Bu et al. 2019)</span> and compare it with classical convex optimization methods. Some numerical experiments regarding the cases that do not fit into the theoretical framework of <span class="citation">(Bu et al. 2019)</span> are also performed and analyzed.</p>
@@ -224,7 +224,7 @@ To resolve this issue and prevent overfitting, we introduce a penalty function <
 <h2>Approximate message passing</h2>
 <p>The AMP approach is Bayes in nature. Namely, we assume that the true values of <span class="math inline">\(x\)</span> are i.i.d. from some apriori distribution <span class="math inline">\(X=(X_1,\ldots,X_p)\)</span> satisfying some intregrability choditions and that the noise vector <span class="math inline">\(w\)</span> is elementwise i.i.d. with zero mean and variance <span class="math inline">\(\sigma_w^2&lt;\infty\)</span>. The apriori distribution <span class="math inline">\(X\)</span> and the parameter <span class="math inline">\(\sigma_w^2\)</span> will play a crucial role in the construction of the algorithm as will be seen in a while. The base of the AMP algorithm for SLOPE is as follows</p>
 <hr />
-<p><strong>AMP-SLOPE:</strong><br> <strong>Input:</strong> <span class="math inline">\(y\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\lambda\in\Delta_p\)</span>, <span class="math inline">\(A\in{\mathbb{R}}^{n\times p}\)</span><br> Initialize: <span class="math inline">\(g(x)=\frac{1}{2}{\left\Vert Ax-y \right\Vert}^2\)</span>, <span class="math inline">\(x=x_{old}\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(v=\nabla g(0)\)</span>, <span class="math inline">\(t=t(X)\in{\mathbb{R}}_+\)</span><br> <strong>while</strong> <em>(stopping condition)</em> <strong>{</strong><br>   <span class="math inline">\(x_{old}\leftarrow x\)</span>;<br>   <span class="math inline">\(x \leftarrow {\operatorname{prox}}_{\phi_{t\lambda}}\big(x_{old} - v\big)\)</span>;<br>   <span class="math inline">\(v \leftarrow \nabla g(x) - \frac{v}{n} [\nabla{\operatorname{prox}}_{\phi_{t\lambda}}(x_{old} - v)]\)</span>;<br>   <em>update</em>(<span class="math inline">\(t\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
+<p><strong>AMP-SLOPE:</strong><br> <strong>Input:</strong> <span class="math inline">\(y\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\lambda\in\Delta_p\)</span>, <span class="math inline">\(A\in{\mathbb{R}}^{n\times p}\)</span><br> Initialize: <span class="math inline">\(g(x)=\frac{1}{2}{\left\Vert Ax-y \right\Vert}^2\)</span>, <span class="math inline">\(x=x_{old}\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(v=\nabla g(x)\)</span>, <span class="math inline">\(t=t(X)\in{\mathbb{R}}_+\)</span><br> <strong>while</strong> <em>(stopping condition)</em> <strong>{</strong><br>   <span class="math inline">\(x_{old}\leftarrow x\)</span>;<br>   <span class="math inline">\(x \leftarrow {\operatorname{prox}}_{\phi_{t\lambda}}\big(x_{old} - v\big)\)</span>;<br>   <span class="math inline">\(v \leftarrow \nabla g(x) - \frac{v}{n} [\nabla{\operatorname{prox}}_{\phi_{t\lambda}}(x_{old} - v)]\)</span>;<br>   <em>update</em>(<span class="math inline">\(t\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
 <hr />
 <p>Based on the observations 1.-7. above, it is easy to verify that for any vector <span class="math inline">\(u\in{\mathbb{R}}^p\)</span> <span class="math display">\[
   \nabla{\operatorname{prox}}_{\phi_\lambda}(u) = 
@@ -241,9 +241,9 @@ Moreover, the scaling factor <span class="math inline">\(t\)</span> and its upda
   \tau\in{\mathbb{R}}_+,\,\alpha\in\Delta^p,
 \]</span> where <span class="math inline">\(Z\)</span> is the <span class="math inline">\(\mathcal{N}(0,I_p)\)</span> random vector independent on the whole model. Then, setting
 <span class="math display">\[\begin{equation}\label{eq:SE}
-\tau_0=\sigma_w^2 + \frac{p}{n}\mathbb{E} X_1^2,
+\tau_0^2=\sigma_w^2 + \frac{p}{n}\mathbb{E} X_1^2,
 \quad
-\tau_{k+1} = F(\tau_k,\alpha),
+\tau_{k+1}^2 = F(\tau_k,\alpha),
 \quad
 \tau_\ast = \lim_k \tau_k
 \end{equation}\]</span>
@@ -259,8 +259,58 @@ we choose <span class="math inline">\(\hat{\alpha}\)</span> to be the solution o
 </div>
 <div id="numerical-experiments" class="section level1">
 <h1>Numerical experiments</h1>
-<div id="references" class="section level2 unnumbered">
-<h2>References</h2>
+<pre class="r"><code># library(&quot;rstudioapi&quot;)
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+source(&quot;R-codes/FastProxSL1.R&quot;)
+source(&quot;R-codes/alpha-lambda.R&quot;)
+source(&quot;R-codes/IterativeAlgs.R&quot;)</code></pre>
+<div id="indipendent-case" class="section level2">
+<h2>Indipendent case</h2>
+<p>Parameters of the model:</p>
+<pre class="r"><code>set.seed(351759)
+
+p &lt;- 300
+delta &lt;- 0.5
+eps &lt;- 0.1
+sigma2 &lt;- 0
+n &lt;- p*delta
+A &lt;- matrix(rnorm(n*p,mean=0,sd=1/sqrt(p*delta)), n,p) 
+alpha &lt;- c(rep(1,p*delta),rep(0,p*(1-delta)))
+stepSize &lt;- 10
+maxIter &lt;- 10**3
+
+prior &lt;- function() rnorm(p)*rbinom(p,1,eps)
+x0 &lt;- prior()
+
+x &lt;- rnorm(p)*rbinom(p,1,eps)
+y &lt;- as.numeric(A%*%x+sigma2*rnorm(n))
+lambda &lt;- alpha_to_lambda(alpha, x, delta)
+tau_ast &lt;- alpha_to_tau_ast(alpha, x, delta, sigma2)</code></pre>
+<p>Initialize and run simulations:</p>
+<pre class="r"><code>ISTA &lt;- new(&quot;ISTA-SLOPE&quot;, y=y, A=A, x=x0, lambda=lambda, stepSize=stepSize, max_iter=maxIter)
+FISTA &lt;- new(&quot;FISTA-SLOPE&quot;, y=y, A=A, x=x0, lambda=lambda, stepSize=stepSize, max_iter=maxIter)
+AMP &lt;-   new(&quot;AMP-SLOPE&quot;, y=y, A=A, prior=x, lambda=lambda, alpha=alpha, tau_ast=tau_ast, max_iter=20, backtrack=FALSE)
+
+ISTA_res &lt;- runAlg(ISTA)
+FISTA_res &lt;- runAlg(FISTA)
+AMP_res &lt;- runAlg(AMP)</code></pre>
+<p>PLot the results:</p>
+<pre class="r"><code>t &lt;- c(10:100)
+df &lt;- data.frame(t, ISTA_res@loss[t], FISTA_res@loss[t])#, AMP_res@loss[t])
+colnames(df) &lt;- c(&quot;iteration&quot;,&quot;ISTA&quot;,&quot;FISTA&quot;)#,&quot;AMP&quot;)
+df &lt;- melt(df, id=&quot;iteration&quot;)
+ggplot(data = df,
+       aes(x=iteration, y=value, colour=variable))+
+  geom_line(size=.5) +
+  ggtitle(&quot;Loss evolution&quot;)</code></pre>
+<p><img src="report_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+</div>
+<div id="beyond-the-independent-case" class="section level2">
+<h2>Beyond the independent case(?)</h2>
+</div>
+</div>
+<div id="references" class="section level1 unnumbered">
+<h1>References</h1>
 <div id="refs" class="references">
 <div id="ref-MR2810285">
 <p>Bayati, M., and A. Montanari. 2011. “The Dynamics of Message Passing on Dense Graphs, with Applications to Compressed Sensing.” <em>IEEE Trans. Inform. Theory</em> 57 (2): 764–85. doi:<a href="https://doi.org/10.1109/TIT.2010.2094817">10.1109/TIT.2010.2094817</a>.</p>
@@ -285,7 +335,6 @@ we choose <span class="math inline">\(\hat{\alpha}\)</span> to be the solution o
 </div>
 <div id="ref-zdeborova2016statistical">
 <p>Zdeborová, L., and F. Krzakala. 2016. “Statistical Physics of Inference: Thresholds and Algorithms.” <em>Advances in Physics</em> 65 (5). Taylor &amp; Francis: 453–552. doi:<a href="https://doi.org/https://doi.org/10.1080/00018732.2016.1211393">https://doi.org/10.1080/00018732.2016.1211393</a>.</p>
-</div>
 </div>
 </div>
 </div>
