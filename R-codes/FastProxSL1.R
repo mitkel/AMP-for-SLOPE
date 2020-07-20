@@ -44,6 +44,7 @@ FastProxSL1 <- function( y, theta){
   while( !DeltaCheck(bar) ){
    i <- which(diff(y-theta) > 0)[1] # begining of the first nondecreasing subsequence in y-theta
    j <- i + which(diff( (y-theta)[-(1:i)] ) < 0)[1] # end of the first nondecreasing subsequence in y-theta
+   if(is.na(j)) {j <- length(y)} # to handle the case when the tail is increasing
    y[i:j] <- mean(y[i:j])
    theta[i:j] <- mean(theta[i:j])
    bar <- as.numeric( lapply( y-theta, function(x) max(x,0) ) )
@@ -52,7 +53,7 @@ FastProxSL1 <- function( y, theta){
 }
 
 # ===============================================================
-# sanity check
+# # sanity check
 # foo <- rnorm(5)
 # bar <- MapToDelta(foo)
 # print( data.frame("v" = foo, "w" = bar$w) )
