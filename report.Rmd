@@ -3,19 +3,18 @@ title: "AMP for SLOPE"
 author: "Bartłomiej Polaczyk"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output: 
-  # pdf_document:
-  #   latex_engine: xelatex
-  html_document:
-   css: AMP-SLOPE.css
-   mathjax: local
-   self_contained: false
+  pdf_document:
+    latex_engine: xelatex
+  # html_document:
+  #  css: AMP-SLOPE.css
+  #  mathjax: local
+  #  self_contained: false
 abstract: |
   The aim of this project is to investigate the the approximate message passing algorithm for SLOPE regularization problem based on [@bu2019algorithmic] and compare it with classical convex optimization methods.
   Some numerical experiments regarding the cases that do not fit into the theoretical framework of [@bu2019algorithmic] are also performed and analyzed.
 bibliography: AMP-SLOPE.bib
-header-includes:
-  - \usepackage{mathtools}
-  # - \usepackage[ruled,vlined]{algorithm2e}
+# header-includes:
+#   - \usepackage{mathtools}
 ---
 %LaTeX commands
 \newcommand{\R}{\mathbb{R}}
@@ -35,12 +34,10 @@ MathJax.Hub.Config({
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+load("myData.RData")
 # Libraries
-packages <- c("foreign", "lubridate", "ggplot2","reshape2")
+packages <- c("foreign", "lubridate", "ggplot2", "reshape2")
 lapply(packages, library, character.only = TRUE)
-
-# working directory
-#setwd("~/Dropbox/Uczelnia//")
 ```
 
 
@@ -87,11 +84,11 @@ In the subsequent sections we will describre briefly some of these approaches.
 Denoting $g(x)=\frac{1}{2}\Vert Ax - y \Vert_2^2$, the iterative shrinkage thresholding algorithm (ISTA) iteration for SLOPE with given $\lambda$ can be written as:
 
 ******
-**ISTA-SLOPE:**<br>
-**Input:** $y\in\R^p$, $\lambda\in\Delta_p$, $A\in\R^{n\times p}$<br>
-Initialize $g(x)=\frac{1}{2}\norm{Ax-y}^2$, $x\in\R^p$, $t>0$ <br>
-**while** (*stopping condition*) **{** <br>
-&emsp;  $x \leftarrow \prox_{t\phi_\lambda}\big(x - t\nabla g(x)\big)$;<br>
+**ISTA-SLOPE:**<br>  
+**Input:** $y\in\R^p$, $\lambda\in\Delta_p$, $A\in\R^{n\times p}$<br>  
+Initialize $g(x)=\frac{1}{2}\norm{Ax-y}^2$, $x\in\R^p$, $t>0$ <br>  
+**while** (*stopping condition*) **{** <br>  
+&emsp;  $x \leftarrow \prox_{t\phi_\lambda}\big(x - t\nabla g(x)\big)$;<br>  
 **} return** $x$
 
 ******
@@ -105,19 +102,19 @@ $$
 The general form of the algorithm is the following:
 
 ******
-**FISTA-SLOPE:**<br>
-**Input:** $y\in\R^p$, $\lambda\in\Delta_p$, $A\in\R^{n\times p}$<br>
-Initialize $g(x)=\frac{1}{2}\norm{Ax-y}^2$, $x=x_{old}\in\R^p$, $r = 1$, $t>0$<br>
-**while** *(stopping condition)* **{**<br>
-&emsp;  $u \leftarrow x_{old} + r(x-x_{old})$;<br>
-&emsp;  $x_{old}\leftarrow x$;<br>
-&emsp;  $x \leftarrow \prox_{t\phi_\lambda}\big(u - t\nabla g(u)\big)$;<br>
-&emsp;  *update*($r$);<br>
+**FISTA-SLOPE:**<br>  
+**Input:** $y\in\R^p$, $\lambda\in\Delta_p$, $A\in\R^{n\times p}$<br>  
+Initialize $g(x)=\frac{1}{2}\norm{Ax-y}^2$, $x=x_{old}\in\R^p$, $r = 1$, $t>0$<br>  
+**while** *(stopping condition)* **{**<br>  
+&emsp;  $u \leftarrow x_{old} + r(x-x_{old})$;<br>  
+&emsp;  $x_{old}\leftarrow x$;<br>  
+&emsp;  $x \leftarrow \prox_{t\phi_\lambda}\big(u - t\nabla g(u)\big)$;<br>  
+&emsp;  *update*($r$);<br>  
 **} return** $x$
 
 ******
 
-Here $t$ can be thought of as a acceleration term, which (if updated correctly through the update rule) can increase substantialy the speed of convergence of the algorithm.
+Here $r$ can be thought of as a acceleration term, which (if updated correctly through the update rule) can increase substantialy the speed of convergence of the algorithm.
 Note that keeping $r\equiv 1$ restores ISTA.
 
 One of the difficulties in dealing with SLOPE is that the regulizer $\phi_\lambda$ is non-separable and thus its proximal operator cannot be applied element-wise.
@@ -158,13 +155,13 @@ where $\bar{u},\bar{\lambda}$ are the means of $u$ and $\lambda$ along the indic
 The above observations justify the procedure below proposed by [@MR3418717].
 
 ******
-**FastProxSL1:**<br>
-**Input:** $u\in\R^p$, $\lambda\in\Delta_p$<br>
-\# Define the operator $H_u(v) = P(\sign(u_i)v_i)_i$ for some permutation $P$, so that $H_u(u) = u^\downarrow\in\Delta_p$<br>
-$u' \leftarrow H_u(u)$;<br>
-**while** $(u'-\lambda)_+\notin\Delta_p$ **{**<br>
-&emsp; identify nondecreasing and nonconstant segments $i:j$ of $(u'-\lambda)$<br>
-&emsp; replace $u'_r,\lambda_r$ for $r\in\{i,i+1,\ldots,j\}$ by their averages $\bar{u'},\bar{\lambda}$ <br>
+**FastProxSL1:**<br>  
+**Input:** $u\in\R^p$, $\lambda\in\Delta_p$<br>  
+\# Define the operator $H_u(v) = P(\sign(u_i)v_i)_i$ for some permutation $P$, so that $H_u(u) = u^\downarrow\in\Delta_p$<br>  
+$u' \leftarrow H_u(u)$;<br>  
+**while** $(u'-\lambda)_+\notin\Delta_p$ **{**<br>  
+&emsp; identify nondecreasing and nonconstant segments $i:j$ of $(u'-\lambda)$<br>  
+&emsp; replace $u'_r,\lambda_r$ for $r\in\{i,i+1,\ldots,j\}$ by their averages $\bar{u'},\bar{\lambda}$ <br>  
 **} return** $H_u^{-1}(u'-\lambda)_+$;
 
 ******
@@ -177,15 +174,15 @@ The apriori distribution $X$ and the parameter $\sigma_w^2$ will play a crucial 
 The base of the AMP algorithm for SLOPE is as follows
 
 ******
-**AMP-SLOPE:**<br>
-**Input:** $y\in\R^p$, $\lambda\in\Delta_p$, $A\in\R^{n\times p}$<br>
-Initialize: $g(x)=\frac{1}{2}\norm{Ax-y}^2$, $x=x_{old}\in\R^p$, $v=\nabla g(x)$, $t=t(X)\in\R_+$<br>
-**while** *(stopping condition)* **{**<br>
-&emsp;  $x_{old}\leftarrow x$;<br>
-&emsp;  $x \leftarrow \prox_{\phi_{t\lambda}}\big(x_{old} - v\big)$;<br>
-&emsp;  $v \leftarrow \nabla g(x) - \frac{v}{n} [\nabla\prox_{\phi_{t\lambda}}(x_{old} - v)]$;<br>
-&emsp;  *update*($t$);<br>
-**} return** $x$
+**AMP-SLOPE:**<br>  
+**Input:** $y\in\R^p$, $\alpha\in\Delta_p$, $A\in\R^{n\times p}$<br>  
+Initialize: $g(x)=\frac{1}{2}\norm{Ax-y}^2$, $x=x_{old}\in\R^p$, $v=\nabla g(x)$, $t=t(X)\in\R_+$<br>  
+**while** *(stopping condition)* **{**<br>  
+&emsp;  $x_{old}\leftarrow x$;<br>  
+&emsp;  $x \leftarrow \prox_{\phi_{\tau\alpha}}\big(x_{old} - v\big)$;<br>  
+&emsp;  $v \leftarrow \nabla g(x) + \frac{v}{n} [\nabla\prox_{\phi_{\tau\alpha}}(x_{old} - v)]$;<br>  
+&emsp;  *update*($\tau$);<br>  
+**} return** $x$;
 
 ******
 
@@ -200,10 +197,10 @@ $$
 E.g., $\norm{(0,3,-3,3,1)}_0^\ast = 2$.
 Therefore, $v$ update in the AMP-SLOPE algorithm can be read as
 $$
- v \leftarrow \nabla g(x) - \frac{v}{n} \norm{x}_0^\ast.
+ v \leftarrow \nabla g(x) + \frac{v}{n} \norm{x}_0^\ast.
 $$
 
-Moreover, the scaling factor $t$ and its update rule in the AMP scheme are dictated by the so-called state evolution equation.
+Moreover, the scaling factor $\tau$ and its update rule in the AMP scheme are dictated by the so-called state evolution equation.
 Namely, let
 $$
   F(\tau, \alpha) = \sigma_w^2 + \frac{1}{n} \E\norm{\prox_{\phi_{\tau\alpha}}(X+\tau Z) - X}^2,
@@ -219,73 +216,134 @@ Then, setting
 \quad
 \tau_\ast = \lim_k \tau_k
 \end{equation}
-we choose $\hat{\alpha}$ to be the solution of
+it can be verified that the stationary point of the AMP algorithm is also a minimizer to the SLOPE problem with $\lambda=\hat{\alpha}$ being the solution to
 \begin{equation}\label{eq:lambda-alpha}
-  \lambda = \alpha\tau_\ast\big( 1- \frac{1}{n}\mathbb{E}\Vert{\operatorname{prox}_{\phi_{\tau_\ast\alpha}}(X+\tau_\ast Z)}\Vert_0^\ast \big)
+  \lambda = \alpha\tau_\ast\big( 1- \frac{1}{n}\mathbb{E}\Vert{\operatorname{prox}_{\phi_{\tau_\ast\alpha}}(X+\tau_\ast Z)}\Vert_0^\ast \big).
 \end{equation}
-and finally
-$$
- t = \frac{\tau}{\tau^\ast\bigl(1-\frac{1}{n}\E\Vert{\prox_{\phi_{\tau_\ast\hat{\alpha}}}(X+\tau^\ast Z)}\Vert_0^\ast  \bigr)}.
-$$
 
-@bu2019algorithmic have shown under some technical assumptions that there is a unique fixed point of the state evolution$~\eqref{eq:SE}$ (i.e., that $\tau^\ast$ is well defined), and that the solution $\hat{\alpha}$ to$~\eqref{eq:lambda-alpha}$ is unique and well-defined. They have also proposed a numerical scheme for calculating $\hat{\alpha}$ based on the bisection method which we will exploit.
+@bu2019algorithmic have shown under some technical assumptions the fixed point of the state evolution$~\eqref{eq:SE}$ has unique fixed point (i.e., that $\tau^\ast$ is well defined), and that the solution $\hat{\alpha}$ to$~\eqref{eq:lambda-alpha}$ is unique and well-defined. They have also proposed a numerical scheme for calculating $\hat{\alpha}$ based on the bisection method.
 
 # Numerical experiments
 ```{r, echo=TRUE}
-# library("rstudioapi")
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("R-codes/FastProxSL1.R")
 source("R-codes/alpha-lambda.R")
 source("R-codes/IterativeAlgs.R")
 ```
 
-
-## Indipendent case
 Parameters of the model:
-```{r, echo=TRUE}
+```{r, eval=FALSE}
 set.seed(351759)
 
-p <- 300
-delta <- 0.5
-eps <- 0.1
-sigma2 <- 0
-n <- p*delta
-A <- matrix(rnorm(n*p,mean=0,sd=1/sqrt(p*delta)), n,p) 
-alpha <- c(rep(1,p*delta),rep(0,p*(1-delta)))
-stepSize <- 10
-maxIter <- 10**3
+p=300
+delta=0.5
+eps=0.1
+sigma2=0.2
+n=p*delta
+A=matrix(rnorm(n*p,mean=0,sd=1/sqrt(p*delta)), n, p) 
+alpha=2*c(rep(1,p*delta),rep(0,p*(1-delta)))
+stepSize=10
+tol=0
 
-prior <- function() rnorm(p)*rbinom(p,1,eps)
-x0 <- prior()
+prior= function() rnorm(p)*rbinom(p,1,eps)
 
-x <- rnorm(p)*rbinom(p,1,eps)
-y <- as.numeric(A%*%x+sigma2*rnorm(n))
-lambda <- alpha_to_lambda(alpha, x, delta)
-tau_ast <- alpha_to_tau_ast(alpha, x, delta, sigma2)
+x0=prior()
+x=prior() 
+y=as.numeric(A%*%x+sqrt(sigma2)*rnorm(n))
+tau <- sqrt(sigma2+eps/delta)
+tau_ast <- alpha_to_tau_ast(alpha, x, delta, tau=tau, sigma2 = sigma2, verbose= FALSE, ergodic = TRUE)
+lambdahat <- alpha_to_lambda(alpha, x, delta, tau_ast = tau_ast, sigma2 = sigma2)
 
+print(paste0("True loss: ",loss <- sum( (A %*% x - y)^2)/2 + MapToDelta(x)$w %*% MapToDelta(lambdahat)$w))
 ```
-Initialize and run simulations:
-```{r, echo=TRUE}
-ISTA <- new("ISTA-SLOPE", y=y, A=A, x=x0, lambda=lambda, stepSize=stepSize, max_iter=maxIter)
-FISTA <- new("FISTA-SLOPE", y=y, A=A, x=x0, lambda=lambda, stepSize=stepSize, max_iter=maxIter)
-AMP <-   new("AMP-SLOPE", y=y, A=A, prior=x, lambda=lambda, alpha=alpha, tau_ast=tau_ast, max_iter=20, backtrack=FALSE)
-
-ISTA_res <- runAlg(ISTA)
-FISTA_res <- runAlg(FISTA)
-AMP_res <- runAlg(AMP)
+Fixed point of the state evolution equation:
+```{r, warning=FALSE, eval=FALSE}
+t <- seq(from = 0, to = 4, length.out = 100)
+Ft <- as.numeric(lapply(t, function(x) sqrt(F(x, alpha, delta, prior, sigma2, iter=10))))
 ```
-PLot the results:
+Plot the SE:
 ```{r, warning=FALSE}
-t <- c(10:100)
-df <- data.frame(t, ISTA_res@loss[t], FISTA_res@loss[t])#, AMP_res@loss[t])
-colnames(df) <- c("iteration","ISTA","FISTA")#,"AMP")
+df <- data.frame(t, t, Ft)
+colnames(df) <- c("t","x=y","sqrt(F)")
+df <- melt(df, id="t")
+ggplot(data = df,
+       aes(x=t, y=value, colour=variable))+
+  geom_line(size=.5) +
+  ggtitle("AMP precision")
+```
+
+## Simulations
+
+### Compare AMP with different MC precision
+```{r, eval=FALSE}
+AMP0 <-   new("AMP-SLOPE", 
+             y=y, A=A, prior=prior, tau=tau, lambda=lambdahat, tol=tol, max_iter=25,
+             alpha=alpha, sigma2=sigma2, F_iter=1)
+AMP1 <-   new("AMP-SLOPE", 
+             y=y, A=A, prior=prior, tau=tau, lambda=lambdahat, tol=tol, max_iter=25,
+             alpha=alpha, sigma2=sigma2, F_iter=10)
+AMP2 <-   new("AMP-SLOPE", 
+             y=y, A=A, prior=prior, tau=tau, lambda=lambdahat, tol=tol, max_iter=25,
+             alpha=alpha, sigma2=sigma2, F_iter=10^2)
+AMP3 <-   new("AMP-SLOPE", 
+             y=y, A=A, prior=prior, tau=tau, lambda=lambdahat, tol=tol, max_iter=25,
+             alpha=alpha, sigma2=sigma2, F_iter=10^3)
+
+AMP_res0 <- runAlg(AMP0)
+AMP_res1 <- runAlg(AMP1)
+AMP_res2 <- runAlg(AMP2)
+AMP_res3 <- runAlg(AMP3)
+```
+Plot the results
+
+```{r, warning=FALSE}
+t <- c(5:25)
+df <- data.frame(t, 
+                 AMP_res0@loss[t], 
+                 AMP_res1@loss[t], 
+                 AMP_res2@loss[t], 
+                 AMP_res3@loss[t])
+colnames(df) <- c("iteration","AMP0","AMP1","AMP2","AMP3")
 df <- melt(df, id="iteration")
 ggplot(data = df,
        aes(x=iteration, y=value, colour=variable))+
   geom_line(size=.5) +
-  ggtitle("Loss evolution")
+  ggtitle("AMP precision")
+
 ```
 
-## Beyond the independent case(?)
+### Compare different methods
+```{r, eval=FALSE}
+
+ISTA <- new("ISTA-SLOPE", y=y, A=A, x=x0, lambda=lambdahat, stepSize=stepSize,
+            max_iter=100, tol=tol, init_params=FALSE, verbose=FALSE)
+ISTA_res <- runAlg(ISTA)
+# print(paste0("ISTA loss=", paste0(tail(ISTA_res@loss,1), collapse = "; "),
+#              " after ",ISTA_res@iteration," iterations"))
+
+
+FISTA <- new("FISTA-SLOPE", y=y, A=A, x=x0, lambda=lambdahat, stepSize=stepSize, 
+             tol=tol, max_iter=100, verbose=FALSE)
+FISTA_res <- runAlg(FISTA)
+# print(paste0("FISTA loss=", paste0(tail(FISTA_res@loss,1), collapse = "; "), 
+#              " after ",FISTA_res@iteration," iterations"))
+```
+PLot the results:
+```{r, warning=FALSE}
+t <- c(2:100)
+df <- data.frame(t, ISTA_res@loss[t], FISTA_res@loss[t], AMP_res3@loss[t])
+colnames(df) <- c("iteration","ISTA","FISTA","AMP")
+df <- melt(df, id="iteration")
+ggplot(data = df,
+       aes(x=iteration, y=value, colour=variable))+
+  geom_line(size=.5) +
+  scale_x_continuous(trans='log10') +
+  ggtitle("Loss evolution")
+
+```
+
+## Conclusions
+- AMP works only for the noisy models
+- AMP is very resource consuming due to the MC simulation part -- it could be greatly improved if the integral in the state evolution could be computed analytically, which maybe could be obtained by choosing an appropriate prior.
+- AMP converges faster than ISTA/FISTA to some approximation of the optimum but the latter methods give more precise estimates (is more accurate due to the lack of randomness)
 
 # References
