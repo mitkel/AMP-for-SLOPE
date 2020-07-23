@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bartłomiej Polaczyk" />
 
-<meta name="date" content="2020-07-20" />
+<meta name="date" content="2020-07-23" />
 
 <title>AMP for SLOPE</title>
 
@@ -135,7 +135,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">AMP for SLOPE</h1>
 <h4 class="author"><em>Bartłomiej Polaczyk</em></h4>
-<h4 class="date"><em>20 July 2020</em></h4>
+<h4 class="date"><em>23 July 2020</em></h4>
 <div class="abstract">
 <p class="abstract">Abstract</p>
 <p>The aim of this project is to investigate the the approximate message passing algorithm for SLOPE regularization problem based on <span class="citation">(Bu et al. 2019)</span> and compare it with classical convex optimization methods. Some numerical experiments regarding the cases that do not fit into the theoretical framework of <span class="citation">(Bu et al. 2019)</span> are also performed and analyzed.</p>
@@ -188,7 +188,7 @@ To resolve this issue and prevent overfitting, we introduce a penalty function <
 <hr />
 <p><strong>FISTA-SLOPE:</strong><br> <strong>Input:</strong> <span class="math inline">\(y\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\lambda\in\Delta_p\)</span>, <span class="math inline">\(A\in{\mathbb{R}}^{n\times p}\)</span><br> Initialize <span class="math inline">\(g(x)=\frac{1}{2}{\left\Vert Ax-y \right\Vert}^2\)</span>, <span class="math inline">\(x=x_{old}\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(r = 1\)</span>, <span class="math inline">\(t&gt;0\)</span><br> <strong>while</strong> <em>(stopping condition)</em> <strong>{</strong><br>   <span class="math inline">\(u \leftarrow x_{old} + r(x-x_{old})\)</span>;<br>   <span class="math inline">\(x_{old}\leftarrow x\)</span>;<br>   <span class="math inline">\(x \leftarrow {\operatorname{prox}}_{t\phi_\lambda}\big(u - t\nabla g(u)\big)\)</span>;<br>   <em>update</em>(<span class="math inline">\(r\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
 <hr />
-<p>Here <span class="math inline">\(t\)</span> can be thought of as a acceleration term, which (if updated correctly through the update rule) can increase substantialy the speed of convergence of the algorithm. Note that keeping <span class="math inline">\(r\equiv 1\)</span> restores ISTA.</p>
+<p>Here <span class="math inline">\(r\)</span> can be thought of as a acceleration term, which (if updated correctly through the update rule) can increase substantialy the speed of convergence of the algorithm. Note that keeping <span class="math inline">\(r\equiv 1\)</span> restores ISTA.</p>
 <p>One of the difficulties in dealing with SLOPE is that the regulizer <span class="math inline">\(\phi_\lambda\)</span> is non-separable and thus its proximal operator cannot be applied element-wise. <span class="citation">(Bogdan et al. 2015)</span> have proposed an efficient algorithm that for any <span class="math inline">\(u\in{\mathbb{R}}^p\)</span> computes <span class="math display">\[
  \widehat{x}=
  {\operatorname{prox}}_{\phi_{\lambda}}(u) = 
@@ -224,7 +224,7 @@ To resolve this issue and prevent overfitting, we introduce a penalty function <
 <h2>Approximate message passing</h2>
 <p>The AMP approach is Bayes in nature. Namely, we assume that the true values of <span class="math inline">\(x\)</span> are i.i.d. from some apriori distribution <span class="math inline">\(X=(X_1,\ldots,X_p)\)</span> satisfying some intregrability choditions and that the noise vector <span class="math inline">\(w\)</span> is elementwise i.i.d. with zero mean and variance <span class="math inline">\(\sigma_w^2&lt;\infty\)</span>. The apriori distribution <span class="math inline">\(X\)</span> and the parameter <span class="math inline">\(\sigma_w^2\)</span> will play a crucial role in the construction of the algorithm as will be seen in a while. The base of the AMP algorithm for SLOPE is as follows</p>
 <hr />
-<p><strong>AMP-SLOPE:</strong><br> <strong>Input:</strong> <span class="math inline">\(y\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\lambda\in\Delta_p\)</span>, <span class="math inline">\(A\in{\mathbb{R}}^{n\times p}\)</span><br> Initialize: <span class="math inline">\(g(x)=\frac{1}{2}{\left\Vert Ax-y \right\Vert}^2\)</span>, <span class="math inline">\(x=x_{old}\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(v=\nabla g(x)\)</span>, <span class="math inline">\(t=t(X)\in{\mathbb{R}}_+\)</span><br> <strong>while</strong> <em>(stopping condition)</em> <strong>{</strong><br>   <span class="math inline">\(x_{old}\leftarrow x\)</span>;<br>   <span class="math inline">\(x \leftarrow {\operatorname{prox}}_{\phi_{t\lambda}}\big(x_{old} - v\big)\)</span>;<br>   <span class="math inline">\(v \leftarrow \nabla g(x) - \frac{v}{n} [\nabla{\operatorname{prox}}_{\phi_{t\lambda}}(x_{old} - v)]\)</span>;<br>   <em>update</em>(<span class="math inline">\(t\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
+<p><strong>AMP-SLOPE:</strong><br> <strong>Input:</strong> <span class="math inline">\(y\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(\alpha\in\Delta_p\)</span>, <span class="math inline">\(A\in{\mathbb{R}}^{n\times p}\)</span><br> Initialize: <span class="math inline">\(g(x)=\frac{1}{2}{\left\Vert Ax-y \right\Vert}^2\)</span>, <span class="math inline">\(x=x_{old}\in{\mathbb{R}}^p\)</span>, <span class="math inline">\(v=\nabla g(x)\)</span>, <span class="math inline">\(t=t(X)\in{\mathbb{R}}_+\)</span><br> <strong>while</strong> <em>(stopping condition)</em> <strong>{</strong><br>   <span class="math inline">\(x_{old}\leftarrow x\)</span>;<br>   <span class="math inline">\(x \leftarrow {\operatorname{prox}}_{\phi_{\tau\alpha}}\big(x_{old} - v\big)\)</span>;<br>   <span class="math inline">\(v \leftarrow \nabla g(x) + \frac{v}{n} [\nabla{\operatorname{prox}}_{\phi_{\tau\alpha}}(x_{old} - v)]\)</span>;<br>   <em>update</em>(<span class="math inline">\(\tau\)</span>);<br> <strong>} return</strong> <span class="math inline">\(x\)</span></p>
 <hr />
 <p>Based on the observations 1.-7. above, it is easy to verify that for any vector <span class="math inline">\(u\in{\mathbb{R}}^p\)</span> <span class="math display">\[
   \nabla{\operatorname{prox}}_{\phi_\lambda}(u) = 
@@ -233,9 +233,9 @@ To resolve this issue and prevent overfitting, we introduce a penalty function <
   {\left\Vert u \right\Vert}_0^\ast:= 
   \#\{ \text{unique non-zero magintudes in } {\left\vert u \right\vert} \}.
 \]</span> E.g., <span class="math inline">\({\left\Vert (0,3,-3,3,1) \right\Vert}_0^\ast = 2\)</span>. Therefore, <span class="math inline">\(v\)</span> update in the AMP-SLOPE algorithm can be read as <span class="math display">\[
- v \leftarrow \nabla g(x) - \frac{v}{n} {\left\Vert x \right\Vert}_0^\ast.
+ v \leftarrow \nabla g(x) + \frac{v}{n} {\left\Vert x \right\Vert}_0^\ast.
 \]</span></p>
-Moreover, the scaling factor <span class="math inline">\(t\)</span> and its update rule in the AMP scheme are dictated by the so-called state evolution equation. Namely, let <span class="math display">\[
+Moreover, the scaling factor <span class="math inline">\(\tau\)</span> and its update rule in the AMP scheme are dictated by the so-called state evolution equation. Namely, let <span class="math display">\[
   F(\tau, \alpha) = \sigma_w^2 + \frac{1}{n} {\mathbb{E}}{\left\Vert {\operatorname{prox}}_{\phi_{\tau\alpha}}(X+\tau Z) - X \right\Vert}^2,
   \quad
   \tau\in{\mathbb{R}}_+,\,\alpha\in\Delta^p,
@@ -247,66 +247,123 @@ Moreover, the scaling factor <span class="math inline">\(t\)</span> and its upda
 \quad
 \tau_\ast = \lim_k \tau_k
 \end{equation}\]</span>
-we choose <span class="math inline">\(\hat{\alpha}\)</span> to be the solution of
+it can be verified that the stationary point of the AMP algorithm is also a minimizer to the SLOPE problem with <span class="math inline">\(\lambda=\hat{\alpha}\)</span> being the solution to
 <span class="math display">\[\begin{equation}\label{eq:lambda-alpha}
-  \lambda = \alpha\tau_\ast\big( 1- \frac{1}{n}\mathbb{E}\Vert{\operatorname{prox}_{\phi_{\tau_\ast\alpha}}(X+\tau_\ast Z)}\Vert_0^\ast \big)
+  \lambda = \alpha\tau_\ast\big( 1- \frac{1}{n}\mathbb{E}\Vert{\operatorname{prox}_{\phi_{\tau_\ast\alpha}}(X+\tau_\ast Z)}\Vert_0^\ast \big).
 \end{equation}\]</span>
-<p>and finally <span class="math display">\[
- t = \frac{\tau}{\tau^\ast\bigl(1-\frac{1}{n}{\mathbb{E}}\Vert{{\operatorname{prox}}_{\phi_{\tau_\ast\hat{\alpha}}}(X+\tau^\ast Z)}\Vert_0^\ast  \bigr)}.
-\]</span></p>
-<p><span class="citation">Bu et al. (2019)</span> have shown under some technical assumptions that there is a unique fixed point of the state evolution<span class="math inline">\(~\eqref{eq:SE}\)</span> (i.e., that <span class="math inline">\(\tau^\ast\)</span> is well defined), and that the solution <span class="math inline">\(\hat{\alpha}\)</span> to<span class="math inline">\(~\eqref{eq:lambda-alpha}\)</span> is unique and well-defined. They have also proposed a numerical scheme for calculating <span class="math inline">\(\hat{\alpha}\)</span> based on the bisection method which we will exploit.</p>
+<p><span class="citation">Bu et al. (2019)</span> have shown under some technical assumptions the fixed point of the state evolution<span class="math inline">\(~\eqref{eq:SE}\)</span> has unique fixed point (i.e., that <span class="math inline">\(\tau^\ast\)</span> is well defined), and that the solution <span class="math inline">\(\hat{\alpha}\)</span> to<span class="math inline">\(~\eqref{eq:lambda-alpha}\)</span> is unique and well-defined. They have also proposed a numerical scheme for calculating <span class="math inline">\(\hat{\alpha}\)</span> based on the bisection method.</p>
 </div>
 </div>
 <div id="numerical-experiments" class="section level1">
 <h1>Numerical experiments</h1>
-<pre class="r"><code># library(&quot;rstudioapi&quot;)
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-source(&quot;R-codes/FastProxSL1.R&quot;)
+<pre class="r"><code>source(&quot;R-codes/FastProxSL1.R&quot;)
 source(&quot;R-codes/alpha-lambda.R&quot;)
 source(&quot;R-codes/IterativeAlgs.R&quot;)</code></pre>
-<div id="indipendent-case" class="section level2">
-<h2>Indipendent case</h2>
 <p>Parameters of the model:</p>
 <pre class="r"><code>set.seed(351759)
 
-p &lt;- 300
-delta &lt;- 0.5
-eps &lt;- 0.1
-sigma2 &lt;- 0
-n &lt;- p*delta
-A &lt;- matrix(rnorm(n*p,mean=0,sd=1/sqrt(p*delta)), n,p) 
-alpha &lt;- c(rep(1,p*delta),rep(0,p*(1-delta)))
-stepSize &lt;- 10
-maxIter &lt;- 10**3
+p=300
+delta=0.5
+eps=0.1
+sigma2=0.2
+n=p*delta
+A=matrix(rnorm(n*p,mean=0,sd=1/sqrt(p*delta)), n, p) 
+alpha=2*c(rep(1,p*delta),rep(0,p*(1-delta)))
+stepSize=10
+tol=0
 
-prior &lt;- function() rnorm(p)*rbinom(p,1,eps)
-x0 &lt;- prior()
+prior= function() rnorm(p)*rbinom(p,1,eps)
 
-x &lt;- rnorm(p)*rbinom(p,1,eps)
-y &lt;- as.numeric(A%*%x+sigma2*rnorm(n))
-lambda &lt;- alpha_to_lambda(alpha, x, delta)
-tau_ast &lt;- alpha_to_tau_ast(alpha, x, delta, sigma2)</code></pre>
-<p>Initialize and run simulations:</p>
-<pre class="r"><code>ISTA &lt;- new(&quot;ISTA-SLOPE&quot;, y=y, A=A, x=x0, lambda=lambda, stepSize=stepSize, max_iter=maxIter)
-FISTA &lt;- new(&quot;FISTA-SLOPE&quot;, y=y, A=A, x=x0, lambda=lambda, stepSize=stepSize, max_iter=maxIter)
-AMP &lt;-   new(&quot;AMP-SLOPE&quot;, y=y, A=A, prior=x, lambda=lambda, alpha=alpha, tau_ast=tau_ast, max_iter=20, backtrack=FALSE)
+x0=prior()
+x=prior() 
+y=as.numeric(A%*%x+sqrt(sigma2)*rnorm(n))
+tau &lt;- sqrt(sigma2+eps/delta)
+tau_ast &lt;- alpha_to_tau_ast(alpha, x, delta, tau=tau, sigma2 = sigma2, verbose= FALSE, ergodic = TRUE)
+lambdahat &lt;- alpha_to_lambda(alpha, x, delta, tau_ast = tau_ast, sigma2 = sigma2)
 
-ISTA_res &lt;- runAlg(ISTA)
-FISTA_res &lt;- runAlg(FISTA)
-AMP_res &lt;- runAlg(AMP)</code></pre>
-<p>PLot the results:</p>
-<pre class="r"><code>t &lt;- c(10:100)
-df &lt;- data.frame(t, ISTA_res@loss[t], FISTA_res@loss[t])#, AMP_res@loss[t])
-colnames(df) &lt;- c(&quot;iteration&quot;,&quot;ISTA&quot;,&quot;FISTA&quot;)#,&quot;AMP&quot;)
+print(paste0(&quot;True loss: &quot;,loss &lt;- sum( (A %*% x - y)^2)/2 + MapToDelta(x)$w %*% MapToDelta(lambdahat)$w))</code></pre>
+<p>Fixed point of the state evolution equation:</p>
+<pre class="r"><code>t &lt;- seq(from = 0, to = 4, length.out = 100)
+Ft &lt;- as.numeric(lapply(t, function(x) sqrt(F(x, alpha, delta, prior, sigma2, iter=10))))</code></pre>
+<p>Plot the SE:</p>
+<pre class="r"><code>df &lt;- data.frame(t, t, Ft)
+colnames(df) &lt;- c(&quot;t&quot;,&quot;x=y&quot;,&quot;sqrt(F)&quot;)
+df &lt;- melt(df, id=&quot;t&quot;)
+ggplot(data = df,
+       aes(x=t, y=value, colour=variable))+
+  geom_line(size=.5) +
+  ggtitle(&quot;AMP precision&quot;)</code></pre>
+<p><img src="report_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<div id="simulations" class="section level2">
+<h2>Simulations</h2>
+<div id="compare-amp-with-different-mc-precision" class="section level3">
+<h3>Compare AMP with different MC precision</h3>
+<pre class="r"><code>AMP0 &lt;-   new(&quot;AMP-SLOPE&quot;, 
+             y=y, A=A, prior=prior, tau=tau, lambda=lambdahat, tol=tol, max_iter=25,
+             alpha=alpha, sigma2=sigma2, F_iter=1)
+AMP1 &lt;-   new(&quot;AMP-SLOPE&quot;, 
+             y=y, A=A, prior=prior, tau=tau, lambda=lambdahat, tol=tol, max_iter=25,
+             alpha=alpha, sigma2=sigma2, F_iter=10)
+AMP2 &lt;-   new(&quot;AMP-SLOPE&quot;, 
+             y=y, A=A, prior=prior, tau=tau, lambda=lambdahat, tol=tol, max_iter=25,
+             alpha=alpha, sigma2=sigma2, F_iter=10^2)
+AMP3 &lt;-   new(&quot;AMP-SLOPE&quot;, 
+             y=y, A=A, prior=prior, tau=tau, lambda=lambdahat, tol=tol, max_iter=25,
+             alpha=alpha, sigma2=sigma2, F_iter=10^3)
+
+AMP_res0 &lt;- runAlg(AMP0)
+AMP_res1 &lt;- runAlg(AMP1)
+AMP_res2 &lt;- runAlg(AMP2)
+AMP_res3 &lt;- runAlg(AMP3)</code></pre>
+<p>Plot the results</p>
+<pre class="r"><code>t &lt;- c(5:25)
+df &lt;- data.frame(t, 
+                 AMP_res0@loss[t], 
+                 AMP_res1@loss[t], 
+                 AMP_res2@loss[t], 
+                 AMP_res3@loss[t])
+colnames(df) &lt;- c(&quot;iteration&quot;,&quot;AMP0&quot;,&quot;AMP1&quot;,&quot;AMP2&quot;,&quot;AMP3&quot;)
 df &lt;- melt(df, id=&quot;iteration&quot;)
 ggplot(data = df,
        aes(x=iteration, y=value, colour=variable))+
   geom_line(size=.5) +
-  ggtitle(&quot;Loss evolution&quot;)</code></pre>
-<p><img src="report_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+  ggtitle(&quot;AMP precision&quot;)</code></pre>
+<p><img src="report_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 </div>
-<div id="beyond-the-independent-case" class="section level2">
-<h2>Beyond the independent case(?)</h2>
+<div id="compare-different-methods" class="section level3">
+<h3>Compare different methods</h3>
+<pre class="r"><code>ISTA &lt;- new(&quot;ISTA-SLOPE&quot;, y=y, A=A, x=x0, lambda=lambdahat, stepSize=stepSize,
+            max_iter=100, tol=tol, init_params=FALSE, verbose=FALSE)
+ISTA_res &lt;- runAlg(ISTA)
+# print(paste0(&quot;ISTA loss=&quot;, paste0(tail(ISTA_res@loss,1), collapse = &quot;; &quot;),
+#              &quot; after &quot;,ISTA_res@iteration,&quot; iterations&quot;))
+
+
+FISTA &lt;- new(&quot;FISTA-SLOPE&quot;, y=y, A=A, x=x0, lambda=lambdahat, stepSize=stepSize, 
+             tol=tol, max_iter=100, verbose=FALSE)
+FISTA_res &lt;- runAlg(FISTA)
+# print(paste0(&quot;FISTA loss=&quot;, paste0(tail(FISTA_res@loss,1), collapse = &quot;; &quot;), 
+#              &quot; after &quot;,FISTA_res@iteration,&quot; iterations&quot;))</code></pre>
+<p>PLot the results:</p>
+<pre class="r"><code>t &lt;- c(2:100)
+df &lt;- data.frame(t, ISTA_res@loss[t], FISTA_res@loss[t], AMP_res3@loss[t])
+colnames(df) &lt;- c(&quot;iteration&quot;,&quot;ISTA&quot;,&quot;FISTA&quot;,&quot;AMP&quot;)
+df &lt;- melt(df, id=&quot;iteration&quot;)
+ggplot(data = df,
+       aes(x=iteration, y=value, colour=variable))+
+  geom_line(size=.5) +
+  scale_x_continuous(trans=&#39;log10&#39;) +
+  ggtitle(&quot;Loss evolution&quot;)</code></pre>
+<p><img src="report_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+</div>
+</div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
+<ul>
+<li>AMP works only for the noisy models</li>
+<li>AMP is very resource consuming due to the MC simulation part – it could be greatly improved if the integral in the state evolution could be computed analytically, which maybe could be obtained by choosing an appropriate prior.</li>
+<li>AMP converges faster than ISTA/FISTA to some approximation of the optimum but the latter methods give more precise estimates (is more accurate due to the lack of randomness)</li>
+</ul>
 </div>
 </div>
 <div id="references" class="section level1 unnumbered">
