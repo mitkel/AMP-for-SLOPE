@@ -49,7 +49,7 @@ FastProxSL1 <- function( y, theta){
    theta[i:j] <- mean(theta[i:j])
    bar <- as.numeric( lapply( y-theta, function(x) max(x,0) ) )
   }
-  return( RetrV(bar, foo$sgn, foo$P))
+  return( RetrV(bar, foo$sgn, foo$P) )
 }
 
 # ===============================================================

@@ -3,37 +3,67 @@
 # setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # source("FastProxSL1.R")
 
-F <- function(tau, alpha, delta, prior, sigma2=0, iter = 40){
+F <- function(tau, alpha, delta, prior, sigma2=0, iter = 100){
   p <- length(alpha)
   res <- 0
   for(i in 1:iter){
-    res <- (res*(i-1) + mean( (FastProxSL1(prior + tau*rnorm(p), alpha*tau)-prior)**2)/delta)/i
+    foo <- prior()
+    res <- (res*(i-1) + mean( (FastProxSL1(foo + tau*rnorm(p), alpha*tau) - foo)^2) )/i
   }
   
-  return(sigma2+res)
+  return(sigma2+res/delta)
 }
+
+# psi <- function(tau, lambda, delta, prior, iter=100){
+#   p <- length(lambda)
+#   res <- 0
+#   for(i in 1:iter){
+#     foo <- prior
+#     res <- (res*(i-1) + mean( (FastProxSL1(foo + tau/sqrt(delta)*rnorm(p), alpha*tau)-foo)**2))/i
+#   }
+#   return(res)
+# }
 
 ZeroAstNorm <- function(foo) length(unique(abs(foo[which(foo != 0)])))
 
-alpha_to_tau_ast <- function(alpha, prior, delta, sigma2 = 0, iter = 25){
-  tau <- sqrt(sigma2 + mean(prior**2)/delta)
+alpha_to_tau_ast <- function(alpha, prior, delta, sigma2 = 0, iter1 = 50, iter2 = 20, 
+                             tau = NA_real_, verbose=FALSE, ergodic=TRUE){
+  
+  if(is.na(tau)){
+    foo <- 0
+    for(i in 1:10) foo <- (foo*(i-1)+mean(prior()^2))/i
+    tau <- sqrt(sigma2 + foo/delta)
+  }
   res <- tau
   
-  for(i in 1:iter){
-    tau <- sqrt(F(tau, alpha, delta, prior, sigma2))
-    res <- (res*(i-1) + tau)/i
+  for(i in 1:iter1){
+    tau <- sqrt(F(tau, alpha, delta, prior, sigma2, iter=iter2))
+    res <- c(res,tau)
+    
+    if(verbose) print(paste0(i,": ",tau))
   }
+  if(ergodic) res <- mean(res)
+  else res <- tail(res,1)
   
   return(res)
 }
 
-alpha_to_lambda <- function(alpha, prior, delta, sigma2 = 0, max_iter = 20){
-  tau_ast <-  alpha_to_tau_ast(alpha, prior, delta, sigma2)
+alpha_to_lambda <- function(alpha, x, delta, sigma2 = 0, max_iter = 100, 
+                            tau_ast = NA_real_, tau=NA_real_, prior = NULL, verbose = FALSE){
+  if(is.na(tau_ast) && is.null(prior)) {
+    warning("neither prior nor tau_ast specified")
+    return(0)
+  }
+  
+  if(is.na(tau_ast)){
+    tau_ast <-  alpha_to_tau_ast(alpha, prior, delta, sigma2, tau=tau)
+  }
   p <-  length(alpha)
   
   res <-  0
   for(i in 1:max_iter){
-    res <-  (res*(i-1) + ZeroAstNorm(FastProxSL1(prior + tau_ast*rnorm(p), tau_ast*alpha))/(delta*p) )/i
+    res <-  (res*(i-1) + ZeroAstNorm(FastProxSL1(x + tau_ast*rnorm(p), tau_ast*alpha))/(delta*p) )/i
+    if(verbose) print(paste0(i,": ",res))
   }
   
   return((1-res)*alpha*tau_ast)

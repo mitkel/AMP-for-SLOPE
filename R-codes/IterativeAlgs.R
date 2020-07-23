@@ -4,9 +4,12 @@
 # source("FastProxSL1.R")
 
 # auxilary function returning sorted l1 loss function ||Ax-y||_2^2/2 + SL1(x,lambda)
-SL1Loss <- function(foo) {
-  sum( (foo@A %*% foo@x - foo@y)**2 )/2 + 
-    as.numeric(MapToDelta(foo@x)$w %*% MapToDelta(foo@lambda)$w) 
+# SL1Loss <- function(foo) {
+#   sum( (foo@A %*% foo@x - foo@y)**2 )/2 + 
+#     as.numeric(MapToDelta(foo@x)$w %*% MapToDelta(foo@lambda)$w) 
+# }
+SL1Loss <- function(A,x,y,lambda){
+  sum( (A %*% x - y)^2)/2 + as.numeric(MapToDelta(x)$w %*% MapToDelta(lambda)$w)
 }
 
 # for working with S4 objects
@@ -23,13 +26,17 @@ setClass("GFOMA",
                         backtrack = "logical",
                         lossFun = "function",
                         tol = "numeric",
-                        max_iter = "numeric"),
+                        max_iter = "numeric",
+                        init_params = "logical",
+                        verbose = "logical"),
          prototype(iteration = 0,
                    loss = Inf,
                    backtrack = TRUE,
-                   lossFun = function(x) SL1Loss(x),
+                   lossFun = SL1Loss,
                    tol = 10**(-4),
-                   max_iter = 10**3)
+                   max_iter = 10**3,
+                   init_params = TRUE,
+                   verbose = FALSE)
          )
 
 # (different for different methods)
@@ -59,24 +66,22 @@ setMethod("stopCond", "GFOMA", function(x){
 
 setGeneric("runAlg", function(x) standardGeneric("runAlg"))
 setMethod("runAlg", "GFOMA", function(x){
-  # update some defaulr params (needed for AMP tau^ast, alpha etc.)
-  x <- initParams(x)
+  if(x@verbose) print("begin algorithm")
   
-  while(!stopCond(x)){
-    # save loss at the previous state (before update)
-    x@loss <- c(x@loss, x@lossFun(x))
-    
-    
-    if(x@backtrack) {
-      x <- backTrack(x)}
-    
-    x <- algUpdate(x)
-    
-    x@iteration <- x@iteration + 1
+  # update some defaulr params (needed for AMP tau^ast, alpha etc.)
+  if(x@init_params){
+    if(x@verbose) print("begin initParams")
+    x <- initParams(x)
+    if(x@verbose) print("initialized params")
   }
+  
+  
+  x <- algUpdate(x)
+
   return(x)
 })
 
+# -------------------------------------------------------------------
 # # ISTA
 # y: observed values
 # A: data matrix
@@ -102,15 +107,16 @@ setMethod("backTrack", "ISTA-SLOPE", function(x){
   repeat{
     foo <- x_old - stepSize * t(x@A) %*% (x@A %*% x_old - x@y)
     x@x <- as.numeric(FastProxSL1(foo, stepSize * x@lambda))
-    Qxy <- sum((x@A%*%x_old-x@y)**2)/2 +
+    Qxy <- sum( (x@A%*%x_old-x@y)**2 )/2 +
       (x@x-x_old) %*% t(x@A) %*% (x@A %*% x_old - x@y) +
       0.5*sum((x@x-x_old)**2)/stepSize +
       MapToDelta(x@lambda)$w %*% MapToDelta(x@x)$w
     
-    if(x@lossFun(x) <= Qxy){
+    if(x@lossFun(x@A, x@x, x@y, x@lambda) <= Qxy || x@stepSize < 10^(-6)){
       break
-    } else{
+    } else {
       stepSize <- stepSize * 0.9
+      if(x@verbose) print(stepSize)
     }
     x@x <- x_old
     x@stepSize <- stepSize
@@ -119,12 +125,22 @@ setMethod("backTrack", "ISTA-SLOPE", function(x){
 })
 
 setMethod("algUpdate", "ISTA-SLOPE", function(x){
-  foo <- x@x - x@stepSize * t(x@A) %*% (x@A %*% x@x - x@y)
-  x@x <- as.numeric(FastProxSL1(foo, x@stepSize * x@lambda))
+  while(!stopCond(x)){
+    x@loss <- c(x@loss, x@lossFun(x@A, x@x, x@y, x@lambda))
+    
+    if(x@backtrack) {
+      x <- backTrack(x)}
+    
+    foo <- x@x - x@stepSize * t(x@A) %*% (x@A %*% x@x - x@y)
+    x@x <- as.numeric(FastProxSL1(foo, x@stepSize * x@lambda))
+    
+    x@iteration <- x@iteration + 1
+    if(x@iteration %% 5 == 1 && x@verbose) print(paste0("ISTA-iter: ",x@iteration))
+  }  
   return(x)
 })
 
-
+# -------------------------------------------------------
 # # FISTA
 # x_old: previous state (x_old(0)=x(0))
 # t: acceleration parameter
@@ -152,7 +168,7 @@ setMethod("backTrack", "FISTA-SLOPE", function(x){
   repeat{
     foo <- u_old - stepSize * t(x@A) %*% (x@A %*% u_old - x@y)
     u_new <- as.numeric(FastProxSL1(foo, stepSize * x@lambda))
-    Qxy <- sum((x@A%*%u_old-x@y)**2)/2 +
+    Qxy <- sum( (x@A%*%u_old-x@y)**2 )/2 +
       (u_new-u_old) %*% t(x@A) %*% (x@A %*% u_old - x@y) +
       0.5*sum((u_new-u_old)**2)/stepSize +
       MapToDelta(x@lambda)$w %*% MapToDelta(u_new)$w
@@ -160,10 +176,11 @@ setMethod("backTrack", "FISTA-SLOPE", function(x){
     Fxy <- sum( (x@A %*% u_new - x@y)**2 )/2 +
       as.numeric(MapToDelta(u_new)$w %*% MapToDelta(x@lambda)$w) 
     
-    if(Fxy <= Qxy){
+    if(Fxy <= Qxy || x@stepSize < 10^(-6)){
       break
     } else{
       stepSize <- stepSize * 0.9
+      if(x@verbose) print(x@stepSize)
     }
     
     x@stepSize <- stepSize
@@ -172,16 +189,25 @@ setMethod("backTrack", "FISTA-SLOPE", function(x){
 })
 
 setMethod("algUpdate", "FISTA-SLOPE", function(x){
-  x@x_old <- x@x
-  
-  foo <- x@u - x@stepSize * t(x@A) %*% (x@A %*% x@u - x@y)
-  x@x <- as.numeric(FastProxSL1(foo, x@stepSize * x@lambda))
-  
-  x@t_old <- x@t
-  x@t <- ((1+(1+4*(x@t_old)**(-2))**(1/2))/2)**(-1)
-  
-  x@u <- x@x + x@t*((x@t_old)**(-1)-1) * (x@x - x@x_old)
-  
+  while(!stopCond(x)){
+    x@loss <- c(x@loss, x@lossFun(x@A, x@x, x@y, x@lambda))
+    
+    if(x@backtrack) {
+      x <- backTrack(x)}
+    
+    x@x_old <- x@x
+    
+    foo <- x@u - x@stepSize * t(x@A) %*% (x@A %*% x@u - x@y)
+    x@x <- as.numeric(FastProxSL1(foo, x@stepSize * x@lambda))
+    
+    x@t_old <- x@t
+    x@t <- ((1+(1+4*(x@t_old)**(-2))**(1/2))/2)**(-1)
+    
+    x@u <- x@x + x@t*((x@t_old)**(-1)-1) * (x@x - x@x_old)
+    
+    x@iteration <- x@iteration + 1
+    if(x@iteration %% 5 == 1 && x@verbose) print(paste0("FISTA-iter: ",x@iteration))
+  }
   return(x)
 })
 
@@ -195,60 +221,80 @@ setClass("AMP-SLOPE",
                         x = "numeric",
                         x_old = "numeric",
                         v = "numeric",
+                        alpha = "numeric",
                         lambda = "numeric",
-                        t = "numeric",
-                        prior = "numeric",
+                        prior = "function",
                         n = "numeric",
                         p = "numeric",
                         delta = "numeric",
                         tau = "numeric",
-                        tau_ast = "numeric",
-                        alpha = "numeric",
-                        sigma2 = "numeric"),
+                        sigma2 = "numeric",
+                        F_iter = "numeric"),
          prototype(y = NA_real_,
                    A = as.matrix(NA_real_),
                    x = NA_real_,
                    x_old = NA_real_,
                    v = NA_real_,
                    lambda = NA_real_,
-                   t = NA_real_,
                    n = NA_real_,
                    p = NA_real_,
                    delta = NA_real_,
                    tau = NA_real_,
-                   tau_ast = NA_real_,
                    alpha = NA_real_,
-                   sigma2 = 0),
+                   sigma2 = 0,
+                   F_iter = 10^3),
          contain = "GFOMA")
 
 setMethod("initParams", "AMP-SLOPE", function(x) {
-  x@n <- dim(x@A)[1]
-  x@p <- dim(x@A)[2]
-  x@delta <- x@n/x@p
-  x@tau <- sqrt(x@sigma2 + mean(x@prior**2)/x@delta)
-  x@x = rep(0,x@p)
-  x@x_old = rep(0,x@p)
-  x@v <- as.numeric( t(x@A) %*% (x@A %*% x@x - x@y))
+  if(x@verbose) print("initParams::begin")
+  
+  if(anyNA(x@n)) x@n <- dim(x@A)[1]
+  if(anyNA(x@p)) x@p <- dim(x@A)[2]
+  if(anyNA(x@delta)) x@delta <- x@n/x@p
+  if(anyNA(x@x)) x@x = rep(0,x@p)
+  if(anyNA(x@x_old)) x@x_old = rep(0,x@p)
+  if(anyNA(x@v)) x@v <- as.numeric( t(x@A) %*% (x@A %*% x@x - x@y))
+  
+  if(is.na(x@tau)){
+    foo <- 0
+    for(i in 1:10) foo <- (foo*(i-1)+mean(x@prior()**2))/i
+    x@tau <- sqrt(x@sigma2 + foo/delta)
+  }
   
   if(anyNA(x@alpha)){
-    x@alpha <- lambda_to_alpha(x@lambda, x@prior, x@delta, x@sigma2)
-  }
-  if(anyNA(x@tau_ast)){
-    x@tau_ast <- alpha_to_tau_ast(x@alpha, x@prior, x@delta, x@sigma2)
-  }
-  x@t <- x@tau * x@alpha[1]/x@lambda[1]
+    warning("alpha not specified!")
+    return(NULL)
+  } 
   
+  if(anyNA(x@lambda)){
+    x@lambda <- alpha_to_lambda(x@alpha, x@prior, x@delta, x@tau)
+  }
+  
+  if(x@verbose) print("initParams::end")
   return(x)
 })
 
 setMethod("algUpdate", "AMP-SLOPE", function(x){
-  x@x_old <- x@x
-  x@x <- as.numeric(FastProxSL1(x@x_old - x@v, x@lambda * x@t))
-  x@v <- as.numeric( t(x@A) %*% (x@A %*% x@x - x@y) + x@v*ZeroAstNorm(x@x)/x@n )
-  
-  tau_old = x@tau
-  x@tau <-  sqrt(F(x@tau, x@alpha, x@delta, x@prior, x@sigma2, iter=1))
-  x@t <- x@t*x@tau/tau_old
+  while(!stopCond(x)){
+    if(x@iteration %% 5 == 0 && x@verbose) print(paste0("Begin AMP-iter: ",x@iteration))
+    
+    x@loss <- c(x@loss, x@lossFun(x@A, x@x, x@y, x@lambda))
+    
+    if(x@backtrack) {
+      x <- backTrack(x)}
+    
+    x@x_old <- x@x
+    x@x <- as.numeric(FastProxSL1(x@x_old - x@v, x@alpha * x@tau))
+    
+    x@v <- as.numeric( t(x@A) %*% (x@A %*% x@x - x@y) + x@v*ZeroAstNorm(x@x)/x@n )
+    
+    tau_old <- x@tau
+    x@tau <- sqrt( F(x@tau, x@alpha, x@delta, x@prior, x@sigma2, iter= x@F_iter) )
+    # x@t <- x@t*x@tau/tau_old
+    
+    if(x@iteration %% 5 == 0 && x@verbose) print(paste0("End AMP-iter: ", x@iteration))
+    x@iteration <- x@iteration + 1
+  }
   
   return(x)
 })
